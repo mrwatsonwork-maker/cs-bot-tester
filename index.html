@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>客服机器人测试工作台</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c232d; --line:#283142;
+    --ink:#e6edf3; --ink-dim:#8b98a9; --accent:#3ddc97; --accent-dim:#1f7a5a;
+    --user:#2563eb; --bot:#222b38; --good:#3ddc97; --bad:#f87171; --warn:#fbbf24;
+    font-size:15px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",sans-serif;
+    display:flex;flex-direction:column;height:100dvh;overflow:hidden;
+  }
+  .topbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;background:var(--panel);border-bottom:1px solid var(--line);
+    padding-top:max(14px,env(safe-area-inset-top));}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px;}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);}
+  .model-pill{font-size:11px;color:var(--ink-dim);background:var(--panel2);border:1px solid var(--line);padding:4px 9px;border-radius:20px;}
+  .tabs{flex:0 0 auto;display:flex;background:var(--panel);border-bottom:1px solid var(--line);}
+  .tab{flex:1;text-align:center;padding:11px 0;font-size:13px;color:var(--ink-dim);
+    border-bottom:2px solid transparent;cursor:pointer;}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+
+  /* 主体：每个 view 自己管理滚动和底部输入条 */
+  .views{flex:1 1 auto;position:relative;overflow:hidden;}
+  .view{position:absolute;inset:0;display:none;flex-direction:column;}
+  .view.active{display:flex;}
+  .scroll{flex:1 1 auto;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch;}
+
+  /* 配置 */
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:12px;color:var(--ink-dim);margin-bottom:7px;letter-spacing:.4px;text-transform:uppercase;}
+  textarea,select,input[type=number]{width:100%;background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:12px;padding:12px;font-size:14px;font-family:inherit;outline:none;}
+  textarea:focus,select:focus,input:focus{border-color:var(--accent-dim);}
+  textarea#sysPrompt{min-height:120px;resize:vertical;line-height:1.5;}
+  .slider-row{display:flex;align-items:center;gap:12px;}
+  input[type=range]{flex:1;accent-color:var(--accent);}
+  .slider-val{font-weight:600;color:var(--accent);min-width:34px;text-align:right;}
+  .templates{display:flex;gap:8px;flex-wrap:wrap;}
+  .tpl{font-size:12px;padding:7px 12px;background:var(--panel2);border:1px solid var(--line);border-radius:20px;cursor:pointer;}
+  .tpl:active{background:var(--accent-dim);border-color:var(--accent);}
+  .hint{font-size:11px;color:var(--warn);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);
+    border-radius:10px;padding:9px 11px;margin-bottom:16px;line-height:1.5;}
+  .section-title{font-size:11px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
+
+  /* 对话气泡 */
+  .msgs{flex:1 1 auto;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch;}
+  .msg{max-width:84%;display:flex;flex-direction:column;gap:5px;}
+  .msg.user{align-self:flex-end;align-items:flex-end;}
+  .msg.bot{align-self:flex-start;align-items:flex-start;}
+  .bubble{padding:11px 14px;border-radius:16px;font-size:14px;line-height:1.5;word-break:break-word;}
+  .msg.user .bubble{background:var(--user);border-bottom-right-radius:4px;}
+  .msg.bot .bubble{background:var(--bot);border:1px solid var(--line);border-bottom-left-radius:4px;}
+  .msg-meta{font-size:10px;color:var(--ink-dim);display:flex;gap:10px;align-items:center;}
+  .rate{display:flex;gap:6px;}
+  .rate button{background:none;border:1px solid var(--line);border-radius:8px;padding:2px 8px;font-size:13px;color:var(--ink-dim);}
+  .rate button.up.on{color:var(--good);border-color:var(--good);}
+  .rate button.down.on{color:var(--bad);border-color:var(--bad);}
+  .empty{color:var(--ink-dim);text-align:center;margin:auto;font-size:13px;line-height:1.7;padding:40px;}
+  .empty .big{font-size:30px;margin-bottom:8px;}
+
+  /* 输入条：作为对话 view 的最后一个子元素，稳稳贴底 */
+  .composer{flex:0 0 auto;display:flex;gap:9px;padding:12px;background:var(--panel);
+    border-top:1px solid var(--line);align-items:flex-end;
+    padding-bottom:max(12px,env(safe-area-inset-bottom));}
+  .composer textarea{flex:1;min-height:46px;max-height:120px;border-radius:23px;padding:12px 16px;resize:none;}
+  .send{flex:0 0 auto;width:46px;height:46px;border-radius:50%;border:none;background:var(--accent);
+    color:#06281c;font-size:20px;font-weight:700;display:grid;place-items:center;}
+  .send:disabled{opacity:.4;}
+
+  /* 历史 */
+  .session{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;}
+  .session h4{font-size:14px;margin-bottom:5px;}
+  .session .sub{font-size:11px;color:var(--ink-dim);display:flex;gap:12px;flex-wrap:wrap;}
+  .toolbar{display:flex;gap:9px;margin-bottom:16px;}
+  .btn{flex:1;padding:11px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:13px;font-weight:600;}
+  .btn.primary{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
+  .typing{display:inline-flex;gap:4px;align-items:center;}
+  .typing span{width:6px;height:6px;border-radius:50%;background:var(--ink-dim);animation:blink 1.2s infinite;}
+  .typing span:nth-child(2){animation-delay:.2s;}.typing span:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,60%,100%{opacity:.2;}30%{opacity:1;}}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>客服测试工作台</div>
+    <div class="model-pill" id="modelPill">Gemini · 模拟</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-view="chat">💬 对话测试</div>
+    <div class="tab" data-view="config">⚙️ 配置</div>
+    <div class="tab" data-view="history">🗂 历史</div>
+  </div>
+
+  <div class="views">
+    <!-- 对话测试：滚动消息 + 贴底输入条 -->
+    <div class="view active" id="view-chat">
+      <div class="msgs" id="msgs">
+        <div class="empty" id="emptyState">
+          <div class="big">💬</div>
+          扮演客户提个问题<br>测试机器人怎么回<br>
+          <span style="font-size:11px;opacity:.7">回复为模拟，结构按主流对话接口</span>
+        </div>
+      </div>
+      <div class="composer">
+        <textarea id="input" placeholder="扮演客户说点什么…" rows="1"></textarea>
+        <button class="send" id="sendBtn">↑</button>
+      </div>
+    </div>
+
+    <!-- 配置 -->
+    <div class="view" id="view-config">
+      <div class="scroll">
+        <p class="section-title">捏一个客服机器人</p>
+        <div class="field"><label>角色设定 System Prompt</label>
+          <textarea id="sysPrompt">你是一名友好、专业的电商售后客服。回答简洁、有耐心，遇到无法解决的问题主动引导用户联系人工。</textarea></div>
+        <div class="field"><label>快速模板</label><div class="templates" id="templates"></div></div>
+        <div class="field"><label>底层模型</label>
+          <select id="modelSel"><option value="gemini">Gemini（首期接入）</option><option value="other">其他模型（预留切换）</option></select></div>
+        <div class="field"><label>温度 Temperature</label>
+          <div class="slider-row"><input type="range" id="temp" min="0" max="1" step="0.1" value="0.5"><span class="slider-val" id="tempVal">0.5</span></div></div>
+        <div class="field"><label>最大回复长度（token）</label>
+          <input type="number" id="maxTok" value="512" min="64" max="2048" step="64"></div>
+        <div class="hint">⚠️ 正式上线时 API key 必须放服务器后端代理，绝不能写死在前端，否则会被盗刷。</div>
+      </div>
+    </div>
+
+    <!-- 历史 -->
+    <div class="view" id="view-history">
+      <div class="scroll">
+        <div class="toolbar">
+          <button class="btn primary" id="saveBtn">💾 保存当前会话</button>
+          <button class="btn" id="resetBtn">🗑 清空对话</button>
+        </div>
+        <p class="section-title">已保存的测试会话</p>
+        <div id="sessionList">
+          <div class="empty" style="margin:20px auto"><div class="big">🗂</div>还没有保存的会话<br>测完一段对话，点上面保存</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const $=id=>document.getElementById(id);
+const msgs=$('msgs'),input=$('input'),sys=$('sysPrompt'),temp=$('temp'),tempVal=$('tempVal'),
+      modelSel=$('modelSel'),maxTok=$('maxTok'),emptyState=$('emptyState'),
+      sessionList=$('sessionList'),modelPill=$('modelPill');
+const state={messages:[],sessions:[],
+  config(){return{system:sys.value,model:modelSel.value,temperature:parseFloat(temp.value),maxTokens:parseInt(maxTok.value)};}};
+
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');$('view-'+t.dataset.view).classList.add('active');
+});
+
+temp.oninput=()=>tempVal.textContent=parseFloat(temp.value).toFixed(1);
+modelSel.onchange=()=>modelPill.textContent=(modelSel.value==='gemini'?'Gemini':'其他模型')+' · 模拟';
+
+const TEMPLATES=[
+  {name:'电商售后',p:'你是一名友好、专业的电商售后客服。回答简洁、有耐心，遇到无法解决的问题主动引导用户联系人工。'},
+  {name:'技术支持',p:'你是一名技术支持工程师。先确认用户的问题环境，分步骤给出排查方案，语言清晰不堆术语。'},
+  {name:'预约咨询',p:'你是一名预约咨询助手。引导用户提供时间、人数、需求，确认信息后给出可预约的选项。'},
+];
+TEMPLATES.forEach(t=>{const b=document.createElement('div');b.className='tpl';b.textContent=t.name;
+  b.onclick=()=>sys.value=t.p;$('templates').appendChild(b);});
+
+function mockReply(userText,cfg){
+  const tone=cfg.temperature<0.3?'（严谨）':cfg.temperature>0.7?'（灵活）':'';
+  const base=`您好${tone}，关于「${userText.slice(0,18)}${userText.length>18?'…':''}」，我理解您的情况。`;
+  const tail=['请您提供一下订单号，我帮您核实处理进度。','这边为您提供两个解决方案，您看哪个方便？','我已记录您的问题，如需进一步处理可随时转人工客服。'][Math.floor(Math.random()*3)];
+  return base+tail;
+}
+function addMsg(role,content,meta){
+  emptyState.style.display='none';
+  const wrap=document.createElement('div');wrap.className='msg '+(role==='user'?'user':'bot');
+  const b=document.createElement('div');b.className='bubble';b.textContent=content;wrap.appendChild(b);
+  if(role==='assistant'){
+    const m=document.createElement('div');m.className='msg-meta';
+    m.innerHTML=`<span>${meta.tokens} tokens · ${meta.ms}ms</span>`;
+    const rate=document.createElement('div');rate.className='rate';
+    rate.innerHTML=`<button class="up">👍</button><button class="down">👎</button>`;
+    const o={role,content,ts:Date.now(),meta,rating:0};
+    rate.querySelector('.up').onclick=function(){this.classList.toggle('on');rate.querySelector('.down').classList.remove('on');o.rating=this.classList.contains('on')?1:0;};
+    rate.querySelector('.down').onclick=function(){this.classList.toggle('on');rate.querySelector('.up').classList.remove('on');o.rating=this.classList.contains('on')?-1:0;};
+    m.appendChild(rate);wrap.appendChild(m);state.messages.push(o);
+  }else state.messages.push({role,content,ts:Date.now()});
+  msgs.appendChild(wrap);msgs.scrollTop=msgs.scrollHeight;
+}
+function showTyping(){const w=document.createElement('div');w.className='msg bot';w.id='typing';
+  w.innerHTML=`<div class="bubble"><span class="typing"><span></span><span></span><span></span></span></div>`;
+  msgs.appendChild(w);msgs.scrollTop=msgs.scrollHeight;}
+function hideTyping(){const t=$('typing');if(t)t.remove();}
+function send(){
+  const text=input.value.trim();if(!text)return;
+  addMsg('user',text);input.value='';input.style.height='auto';
+  const cfg=state.config();showTyping();const start=performance.now();
+  setTimeout(()=>{hideTyping();const r=mockReply(text,cfg);
+    addMsg('assistant',r,{tokens:Math.ceil(r.length*1.6),ms:Math.round(performance.now()-start)});},600+Math.random()*700);
+}
+$('sendBtn').onclick=send;
+input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,120)+'px';});
+input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
+
+$('saveBtn').onclick=()=>{
+  if(state.messages.length===0){alert('当前还没有对话内容');return;}
+  state.sessions.unshift({id:Date.now(),config:state.config(),messages:[...state.messages],
+    title:state.messages.find(m=>m.role==='user')?.content.slice(0,20)||'未命名会话'});
+  renderSessions();alert('已保存这段测试会话 ✓');
+};
+$('resetBtn').onclick=()=>{state.messages=[];msgs.innerHTML='';msgs.appendChild(emptyState);emptyState.style.display='block';
+  document.querySelector('.tab[data-view=chat]').click();};
+function renderSessions(){
+  if(state.sessions.length===0)return;sessionList.innerHTML='';
+  state.sessions.forEach(s=>{
+    const g=s.messages.filter(m=>m.rating===1).length,b=s.messages.filter(m=>m.rating===-1).length;
+    const el=document.createElement('div');el.className='session';
+    el.innerHTML=`<h4>${s.title}</h4><div class="sub"><span>${s.messages.length} 条消息</span>
+      <span style="color:var(--good)">👍 ${g}</span><span style="color:var(--bad)">👎 ${b}</span><span>温度 ${s.config.temperature}</span></div>`;
+    el.onclick=()=>{state.messages=[];msgs.innerHTML='';
+      s.messages.forEach(m=>m.role==='user'?addMsg('user',m.content):addMsg('assistant',m.content,m.meta||{tokens:0,ms:0}));
+      sys.value=s.config.system;temp.value=s.config.temperature;tempVal.textContent=s.config.temperature;
+      document.querySelector('.tab[data-view=chat]').click();};
+    sessionList.appendChild(el);
+  });
+}
+</script>
+</body>
+</html>
