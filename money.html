@@ -126,8 +126,8 @@ const DEDUCTIONS=[
   {id:'d4',en:"Broke something",zh:"损坏物品",amt:2},
 ];
 const T={
-  en:{eyebrow:"Pocket Money",forName:"for",balLabel:"This week's balance",startsAt:"Starts at",everyWeek:"every week",base:"base",earned:"earned",lost:"lost",capNote:`Bonus capped at +${CUR}${BONUS_CAP}/week · never goes below ${CUR}0`,cappedTag:"max",earnExtra:"Earn extra",loseMoney:"Lose money",addOwn:"Add your own",whatHappened:"What happened?",amtPh:"0",add:"Add",endWeek:"End week & pay out",history:"History",noActivity:"No activity yet. Tap a button above to start!",weekOf:"Week",dows:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],months:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],jars:"<b>Three jars idea:</b> split each payout into <b>Spend</b>, <b>Save</b> and <b>Share</b> — e.g. 50% spend, 30% save, 20% give. Good money habits start small.",namePrompt:"Whose pocket money is this?",reasonFirst:"Add a reason first",amtFirst:"Enter an amount",addedToast:"Added 🌟",recordedToast:"Recorded",newWeekToast:"New week started 🌱",capAlert:`Heads up: this week's bonus has hit the cap of +${CUR}${BONUS_CAP}. Anything extra won't be added — the idea is to reward good habits, not turn it into a money game.`,zeroAlert:`This week's balance is now at ${CUR}0. It won't go negative, so there's nothing owed — but maybe a good moment to talk about what happened.`,endConfirm:(t,b)=>`This week's total: ${CUR}${t}\nThat amount gets paid out, and a fresh week starts with ${CUR}${b}.`,weekEnded:(p)=>`Week ended — paid ${CUR}${p}`},
-  zh:{eyebrow:"零花钱",forName:"宝贝：",balLabel:"本周余额",startsAt:"每周起始",everyWeek:"",base:"基础",earned:"奖励",lost:"扣除",capNote:`奖励每周封顶 +${CUR}${BONUS_CAP} · 最低不低于 ${CUR}0`,cappedTag:"封顶",earnExtra:"加分奖励",loseMoney:"扣分",addOwn:"自定义记录",whatHappened:"发生了什么？",amtPh:"0",add:"添加",endWeek:"结束本周并发放",history:"记录",noActivity:"还没有记录，点上面的按钮开始吧！",weekOf:"第",dows:["一","二","三","四","五","六","日"],months:["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],jars:"<b>三个罐子：</b>把每次发的钱分成 <b>花费</b>、<b>储蓄</b>、<b>分享</b> —— 例如 50% 花、30% 存、20% 送礼或捐助。好习惯从小养成。",namePrompt:"这是谁的零花钱？",reasonFirst:"请先填写原因",amtFirst:"请输入金额",addedToast:"已添加 🌟",recordedToast:"已记录",newWeekToast:"新的一周开始啦 🌱",capAlert:`提醒：本周奖励已达封顶 +${CUR}${BONUS_CAP}，超出的部分不再计入。奖励是为了鼓励好习惯，而不是变成赚钱游戏哦。`,zeroAlert:`本周余额已经到 ${CUR}0 了。不会变成负数，所以不存在倒欠——但也许是个聊聊"今天发生了什么"的好时机。`,endConfirm:(t,b)=>`本周合计：${CUR}${t}\n这笔钱将发放，下周从 ${CUR}${b} 重新开始。`,weekEnded:(p)=>`本周结束 — 已发放 ${CUR}${p}`}
+  en:{eyebrow:"Pocket Money",forName:"for",balLabel:"This week's balance",startsAt:"Starts at",everyWeek:"every week",base:"base",earned:"earned",lost:"lost",capNote:`Bonus capped at +${CUR}${BONUS_CAP}/week · never goes below ${CUR}0`,cappedTag:"max",earnExtra:"Earn extra",loseMoney:"Lose money",addOwn:"Add your own",whatHappened:"What happened?",amtPh:"0",add:"Add",endWeek:"End week & pay out",history:"History",noActivity:"No activity yet. Tap a button above to start!",weekOf:"Week",dows:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],months:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],jars:"<b>Three jars idea:</b> split each payout into <b>Spend</b>, <b>Save</b> and <b>Share</b> — e.g. 50% spend, 30% save, 20% give. Good money habits start small.",namePrompt:"Whose pocket money is this?",reasonFirst:"Add a reason first",amtFirst:"Enter an amount",addedToast:"Added 🌟",recordedToast:"Recorded",newWeekToast:"New week started 🌱",capAlert:`Heads up: this week's bonus has hit the cap of +${CUR}${BONUS_CAP}. Anything extra won't be added — the idea is to reward good habits, not turn it into a money game.`,zeroAlert:`This week's balance is now at ${CUR}0. It won't go negative, so there's nothing owed — but maybe a good moment to talk about what happened.`,endConfirm:(t,b)=>`This week's total: ${CUR}${t}\nThat amount gets paid out, and a fresh week starts with ${CUR}${b}.`,weekEnded:(p)=>`Week ended — paid ${CUR}${p}`,autoSettleTitle:"New week 🌱",autoSettleBody:(p)=>`Last week was settled automatically — paid ${CUR}${p}. A fresh week has started with ${CUR}${BASE_WEEKLY}.`},
+  zh:{eyebrow:"零花钱",forName:"宝贝：",balLabel:"本周余额",startsAt:"每周起始",everyWeek:"",base:"基础",earned:"奖励",lost:"扣除",capNote:`奖励每周封顶 +${CUR}${BONUS_CAP} · 最低不低于 ${CUR}0`,cappedTag:"封顶",earnExtra:"加分奖励",loseMoney:"扣分",addOwn:"自定义记录",whatHappened:"发生了什么？",amtPh:"0",add:"添加",endWeek:"结束本周并发放",history:"记录",noActivity:"还没有记录，点上面的按钮开始吧！",weekOf:"第",dows:["一","二","三","四","五","六","日"],months:["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],jars:"<b>三个罐子：</b>把每次发的钱分成 <b>花费</b>、<b>储蓄</b>、<b>分享</b> —— 例如 50% 花、30% 存、20% 送礼或捐助。好习惯从小养成。",namePrompt:"这是谁的零花钱？",reasonFirst:"请先填写原因",amtFirst:"请输入金额",addedToast:"已添加 🌟",recordedToast:"已记录",newWeekToast:"新的一周开始啦 🌱",capAlert:`提醒：本周奖励已达封顶 +${CUR}${BONUS_CAP}，超出的部分不再计入。奖励是为了鼓励好习惯，而不是变成赚钱游戏哦。`,zeroAlert:`本周余额已经到 ${CUR}0 了。不会变成负数，所以不存在倒欠——但也许是个聊聊"今天发生了什么"的好时机。`,endConfirm:(t,b)=>`本周合计：${CUR}${t}\n这笔钱将发放，下周从 ${CUR}${b} 重新开始。`,weekEnded:(p)=>`本周结束 — 已发放 ${CUR}${p}`,autoSettleTitle:"新的一周 🌱",autoSettleBody:(p)=>`上周已自动结算 — 发放 ${CUR}${p}。本周已从 ${CUR}${BASE_WEEKLY} 重新开始。`}
 };
 let state={name:"",lang:"bi",entries:[]};let customSign=1;
 const toast=(m)=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1600);};
@@ -170,7 +170,7 @@ let saving=false;
 function applyDefaults(){if(!state.entries)state.entries=[];if(!state.lang)state.lang='bi';if(!state.name)state.name=defaultName();}
 async function load(){
   try{const c=localStorage.getItem('pmtracker:state');if(c){state=JSON.parse(c);applyDefaults();render();}}catch(e){}
-  if(!sb){applyDefaults();render();toast("Offline 离线模式");return;}
+  if(!sb){applyDefaults();render();await checkAutoSettle();toast("Offline 离线模式");return;}
   try{
     const {data,error}=await sb.from('pocket_money').select('data').eq('id',ROW_ID).maybeSingle();
     if(error)throw error;
@@ -178,8 +178,9 @@ async function load(){
     applyDefaults();
     try{localStorage.setItem('pmtracker:state',JSON.stringify(state));}catch(e){}
     render();
+    await checkAutoSettle();
     subscribeRealtime();
-  }catch(e){applyDefaults();render();toast("Cloud offline 云端连接失败");}
+  }catch(e){applyDefaults();render();await checkAutoSettle();toast("Cloud offline 云端连接失败");}
 }
 async function save(){
   applyDefaults();
@@ -200,6 +201,8 @@ function subscribeRealtime(){
   }).subscribe();
 }
 function lastWeekStart(){for(const en of state.entries){if(en.kind==='base')return en.ts;}return 0;}
+// 执行一次结算：记录发放金额、标记本次结算对应的周一、开启新周
+function doPayout(payAt){const wb=weekBalance();const pay=Math.max(0,wb.total);const ts=payAt||Date.now();state.entries.unshift({kind:'base',amt:BASE_WEEKLY,payout:pay,ts});state.lastSettledMonday=mondayOf(new Date(ts)).getTime();return pay;}
 function weekBalance(){const since=lastWeekStart();let bonusRaw=0,ded=0;state.entries.forEach(en=>{if(en.ts>=since&&en.kind!=='base'){if(en.amt>0)bonusRaw+=en.amt;else ded+=Math.abs(en.amt);}});const bonus=Math.min(bonusRaw,BONUS_CAP);const capped=bonusRaw>BONUS_CAP;const total=Math.max(0,BASE_WEEKLY+bonus-ded);return{base:BASE_WEEKLY,bonus,bonusRaw,capped,ded,total};}
 function checkBoundaries(before,after){
   // bonus cap just crossed
@@ -209,7 +212,25 @@ function checkBoundaries(before,after){
 }
 function addCat(refId,amt){const before=weekBalance();state.entries.unshift({kind:'cat',refId,amt,ts:Date.now()});const after=weekBalance();save();render();checkBoundaries(before,after);}
 function addCustomEntry(reason,amt){const before=weekBalance();state.entries.unshift({kind:'custom',reason,amt,ts:Date.now()});const after=weekBalance();save();render();checkBoundaries(before,after);}
-async function endWeek(){const wb=weekBalance();const pay=Math.max(0,wb.total);const ok=await modal({type:'confirm',title:L().endWeek,body:L().endConfirm(pay,BASE_WEEKLY),okText:state.lang==='en'?'Pay out':'发放',danger:false});if(!ok)return;state.entries.unshift({kind:'base',amt:BASE_WEEKLY,payout:pay,ts:Date.now()});save();render();toast(L().newWeekToast);}
+async function endWeek(){const wb=weekBalance();const pay=Math.max(0,wb.total);const ok=await modal({type:'confirm',title:L().endWeek,body:L().endConfirm(pay,BASE_WEEKLY),okText:state.lang==='en'?'Pay out':'发放',danger:false});if(!ok)return;doPayout();save();render();toast(L().newWeekToast);}
+// 周一凌晨进入新一周、上周未结算时自动结算。返回 true 表示发生了结算。
+async function checkAutoSettle(){
+  const thisMonday=mondayOf(new Date()).getTime();
+  // 初次使用、还没有任何 base 记录：以本周一为基准，不补发历史，只登记基准
+  if(state.lastSettledMonday==null){
+    const lws=lastWeekStart();
+    state.lastSettledMonday=lws?mondayOf(new Date(lws)).getTime():thisMonday;
+    return false;
+  }
+  // 已经结算到当前这一周（或更新）：无需处理
+  if(state.lastSettledMonday>=thisMonday)return false;
+  // 进入了新的一周且上周未结算 → 自动结算一次（只发上一周余额，不补历史空白周）
+  const pay=doPayout();
+  save();render();
+  // 弹通知告知结果
+  setTimeout(()=>modal({type:'alert',title:L().autoSettleTitle,body:L().autoSettleBody(pay)}),300);
+  return true;
+}
 function delEntry(ts){state.entries=state.entries.filter(e=>e.ts!==ts);save();render();}
 async function editName(){const n=await modal({type:'prompt',title:L().namePrompt,defaultValue:state.name});if(n&&n.trim()){state.name=n.trim();save();render();}}
 function setLang(l){state.lang=l;save();render();}
