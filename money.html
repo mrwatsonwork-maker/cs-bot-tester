@@ -77,6 +77,17 @@
   .day.future{opacity:0.4;}
   .day.haspos{background:var(--leaf-soft);}
   .day.hasneg{background:var(--rust-soft);}
+  .day{position:relative;cursor:pointer;}
+  .day.future{cursor:default;}
+  .day.checked{border-color:var(--leaf);border-width:2px;}
+  .day .checkmark{position:absolute;top:2px;right:4px;font-size:11px;font-weight:bold;color:var(--leaf);line-height:1;}
+  .day.missed{opacity:0.55;}
+  .day.missed .dnum{text-decoration:line-through;text-decoration-color:var(--muted);}
+  .day.missed .dval.up{color:var(--muted);text-decoration:line-through;}
+  .checkin-btn{width:100%;margin-top:12px;border:2px solid var(--ink);border-radius:12px;padding:12px;font-weight:bold;font-size:14px;cursor:pointer;font-family:inherit;background:var(--gold);box-shadow:3px 3px 0 var(--ink);}
+  .checkin-btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink);}
+  .checkin-btn.done{background:var(--leaf-soft);color:var(--leaf);border-color:var(--leaf);}
+  .pending-note{font-size:12px;color:var(--gold-deep);font-weight:bold;margin-top:6px;background:#f7efd8;border-radius:8px;padding:5px 8px;display:inline-block;}
   .savings-note{background:#f2ecd9;border:2px dashed var(--gold-deep);border-radius:14px;padding:13px 15px;margin-top:14px;font-size:13px;line-height:1.55;}
   .savings-note b{color:var(--gold-deep);}
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--paper);padding:12px 20px;border-radius:30px;font-weight:bold;font-size:14px;opacity:0;transition:all .25s ease;pointer-events:none;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25);}
@@ -122,8 +133,8 @@ const DEDUCTIONS=[
   {id:'d4',en:"Broke something",zh:"损坏物品",amt:2},
 ];
 const T={
-  en:{eyebrow:"Pocket Money",forName:"for",balLabel:"This week's balance",startsAt:"Starts at",everyWeek:"every week",base:"base",earned:"earned",lost:"lost",capNote:`Bonus capped at +${CUR}${BONUS_CAP}/week · never goes below ${CUR}0`,cappedTag:"max",earnExtra:"Earn extra",loseMoney:"Lose money",addOwn:"Add your own",whatHappened:"What happened?",amtPh:"0",add:"Add",history:"History",noActivity:"No activity yet. Tap a button above to start!",weekOf:"Week",dows:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],months:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],jars:"<b>Three jars idea:</b> split each payout into <b>Spend</b>, <b>Save</b> and <b>Share</b> — e.g. 50% spend, 30% save, 20% give. Good money habits start small.",namePrompt:"Whose pocket money is this?",reasonFirst:"Add a reason first",amtFirst:"Enter an amount",addedToast:"Added 🌟",recordedToast:"Recorded",capAlert:`Heads up: this week's bonus has hit the cap of +${CUR}${BONUS_CAP}. Anything extra won't be added — the idea is to reward good habits, not turn it into a money game.`,zeroAlert:`This week's balance is now at ${CUR}0. It won't go negative, so there's nothing owed — but maybe a good moment to talk about what happened.`,weekEnded:(p)=>`Week ended — paid ${CUR}${p}`,autoSettleTitle:"New week 🌱",autoSettleBody:(p)=>`Last week was settled automatically — paid ${CUR}${p}. A fresh week has started with ${CUR}${BASE_WEEKLY}.`},
-  zh:{eyebrow:"零花钱",forName:"宝贝：",balLabel:"本周余额",startsAt:"每周起始",everyWeek:"",base:"基础",earned:"奖励",lost:"扣除",capNote:`奖励每周封顶 +${CUR}${BONUS_CAP} · 最低不低于 ${CUR}0`,cappedTag:"封顶",earnExtra:"加分奖励",loseMoney:"扣分",addOwn:"自定义记录",whatHappened:"发生了什么？",amtPh:"0",add:"添加",history:"记录",noActivity:"还没有记录，点上面的按钮开始吧！",weekOf:"第",dows:["一","二","三","四","五","六","日"],months:["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],jars:"<b>三个罐子：</b>把每次发的钱分成 <b>花费</b>、<b>储蓄</b>、<b>分享</b> —— 例如 50% 花、30% 存、20% 送礼或捐助。好习惯从小养成。",namePrompt:"这是谁的零花钱？",reasonFirst:"请先填写原因",amtFirst:"请输入金额",addedToast:"已添加 🌟",recordedToast:"已记录",capAlert:`提醒：本周奖励已达封顶 +${CUR}${BONUS_CAP}，超出的部分不再计入。奖励是为了鼓励好习惯，而不是变成赚钱游戏哦。`,zeroAlert:`本周余额已经到 ${CUR}0 了。不会变成负数，所以不存在倒欠——但也许是个聊聊"今天发生了什么"的好时机。`,weekEnded:(p)=>`本周结束 — 已发放 ${CUR}${p}`,autoSettleTitle:"新的一周 🌱",autoSettleBody:(p)=>`上周已自动结算 — 发放 ${CUR}${p}。本周已从 ${CUR}${BASE_WEEKLY} 重新开始。`}
+  en:{eyebrow:"Pocket Money",forName:"for",balLabel:"This week's balance",startsAt:"Starts at",everyWeek:"every week",base:"base",earned:"earned",lost:"lost",capNote:`Bonus capped at +${CUR}${BONUS_CAP}/week · never goes below ${CUR}0`,cappedTag:"max",earnExtra:"Earn extra",loseMoney:"Lose money",addOwn:"Add your own",whatHappened:"What happened?",amtPh:"0",add:"Add",history:"History",noActivity:"No activity yet. Tap a button above to start!",weekOf:"Week",dows:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],months:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],jars:"<b>Three jars idea:</b> split each payout into <b>Spend</b>, <b>Save</b> and <b>Share</b> — e.g. 50% spend, 30% save, 20% give. Good money habits start small.",namePrompt:"Whose pocket money is this?",reasonFirst:"Add a reason first",amtFirst:"Enter an amount",addedToast:"Added 🌟",recordedToast:"Recorded",capAlert:`Heads up: this week's bonus has hit the cap of +${CUR}${BONUS_CAP}. Anything extra won't be added — the idea is to reward good habits, not turn it into a money game.`,zeroAlert:`This week's balance is now at ${CUR}0. It won't go negative, so there's nothing owed — but maybe a good moment to talk about what happened.`,weekEnded:(p)=>`Week ended — paid ${CUR}${p}`,autoSettleTitle:"New week 🌱",autoSettleBody:(p)=>`Last week was settled automatically — paid ${CUR}${p}. A fresh week has started with ${CUR}${BASE_WEEKLY}.`,checkIn:"Check in today",checkedIn:"Checked in ✓",pendingNote:(a)=>`+${CUR}${a} today — check in to add it to your balance`,checkinDone:"Nice, checked in! ✓ Today's bonus counts now.",makeupTitle:"Catch-up check-in",makeupBody:(day)=>`Mark ${day} as checked in? Bonuses from that day will then count.`,uncheckBody:(day)=>`Remove the check-in for ${day}? Bonuses from that day will stop counting.`,confirm:"Yes",cancel2:"No"},
+  zh:{eyebrow:"零花钱",forName:"宝贝：",balLabel:"本周余额",startsAt:"每周起始",everyWeek:"",base:"基础",earned:"奖励",lost:"扣除",capNote:`奖励每周封顶 +${CUR}${BONUS_CAP} · 最低不低于 ${CUR}0`,cappedTag:"封顶",earnExtra:"加分奖励",loseMoney:"扣分",addOwn:"自定义记录",whatHappened:"发生了什么？",amtPh:"0",add:"添加",history:"记录",noActivity:"还没有记录，点上面的按钮开始吧！",weekOf:"第",dows:["一","二","三","四","五","六","日"],months:["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],jars:"<b>三个罐子：</b>把每次发的钱分成 <b>花费</b>、<b>储蓄</b>、<b>分享</b> —— 例如 50% 花、30% 存、20% 送礼或捐助。好习惯从小养成。",namePrompt:"这是谁的零花钱？",reasonFirst:"请先填写原因",amtFirst:"请输入金额",addedToast:"已添加 🌟",recordedToast:"已记录",capAlert:`提醒：本周奖励已达封顶 +${CUR}${BONUS_CAP}，超出的部分不再计入。奖励是为了鼓励好习惯，而不是变成赚钱游戏哦。`,zeroAlert:`本周余额已经到 ${CUR}0 了。不会变成负数，所以不存在倒欠——但也许是个聊聊"今天发生了什么"的好时机。`,weekEnded:(p)=>`本周结束 — 已发放 ${CUR}${p}`,autoSettleTitle:"新的一周 🌱",autoSettleBody:(p)=>`上周已自动结算 — 发放 ${CUR}${p}。本周已从 ${CUR}${BASE_WEEKLY} 重新开始。`,checkIn:"今日签到",checkedIn:"今日已签到 ✓",pendingNote:(a)=>`今天还有 +${CUR}${a} 待签到解锁`,checkinDone:"签到成功！✓ 今天的加分已计入。",makeupTitle:"补签",makeupBody:(day)=>`把 ${day} 标记为已签到？那天的加分将开始计入。`,uncheckBody:(day)=>`取消 ${day} 的签到？那天的加分将不再计入。`,confirm:"确定",cancel2:"取消"}
 };
 let state={name:"",lang:"bi",entries:[]};let customSign=1;
 const toast=(m)=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1600);};
@@ -163,7 +174,31 @@ function defaultName(){return state.lang==='zh'?"我的孩子":"my son";}
 function catLabel(it){if(state.lang==='en')return `<span class="lbl">${it.en}</span>`;if(state.lang==='zh')return `<span class="lbl">${it.zh}</span>`;return `<span class="lbl">${it.en}<small>${it.zh}</small></span>`;}
 function reasonText(en){const all=[...BONUSES,...DEDUCTIONS];if(en.kind==='cat'){const it=all.find(x=>x.id===en.refId);if(it){if(state.lang==='en')return it.en;if(state.lang==='zh')return it.zh;return it.en+' · '+it.zh;}}if(en.kind==='base')return en.payout!=null?L().weekEnded(en.payout):'';return en.reason;}
 let saving=false;
-function applyDefaults(){if(!state.entries)state.entries=[];if(!state.lang)state.lang='bi';if(!state.name)state.name=defaultName();}
+function applyDefaults(){if(!state.entries)state.entries=[];if(!state.lang)state.lang='bi';if(!state.name)state.name=defaultName();if(!state.checkins)state.checkins={};}
+// 把时间戳转成本地日期 key（YYYY-MM-DD），用作签到记录的键
+function dayKey(d){const x=new Date(d);return x.getFullYear()+'-'+('0'+(x.getMonth()+1)).slice(-2)+'-'+('0'+x.getDate()).slice(-2);}
+function isCheckedIn(d){return !!(state.checkins&&state.checkins[dayKey(d)]);}
+// 切换某天的签到状态（今日签到 / 补签 / 取消误签）
+async function toggleCheckin(ts){
+  const k=dayKey(ts);
+  const todayS=startOfDay(new Date());
+  const isToday=startOfDay(new Date(ts))===todayS;
+  const dayLabel=new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  if(state.checkins[k]){
+    // 取消签到：过去日期需确认（会让那天加分失效），今天直接取消
+    if(!isToday){const ok=await modal({type:'confirm',body:L().uncheckBody(dayLabel),okText:L().confirm,cancelText:L().cancel2,danger:true});if(!ok)return;}
+    delete state.checkins[k];save();render();return;
+  }
+  // 补签过去的日期需确认
+  if(!isToday){const ok=await modal({type:'confirm',title:L().makeupTitle,body:L().makeupBody(dayLabel),okText:L().confirm,cancelText:L().cancel2});if(!ok)return;}
+  const before=weekBalance();
+  state.checkins[k]=true;
+  const after=weekBalance();
+  save();render();
+  if(isToday)toast(L().checkinDone);
+  // 签到后可能跨过封顶线，沿用既有边界提醒
+  checkBoundaries(before,after);
+}
 async function load(){
   try{const c=localStorage.getItem('pmtracker:state');if(c){state=JSON.parse(c);applyDefaults();render();}}catch(e){}
   if(!sb){applyDefaults();render();await checkAutoSettle();toast("Offline 离线模式");return;}
@@ -199,7 +234,29 @@ function subscribeRealtime(){
 function lastWeekStart(){for(const en of state.entries){if(en.kind==='base')return en.ts;}return 0;}
 // 执行一次结算：记录发放金额、标记本次结算对应的周一、开启新周
 function doPayout(payAt){const wb=weekBalance();const pay=Math.max(0,wb.total);const ts=payAt||Date.now();state.entries.unshift({kind:'base',amt:BASE_WEEKLY,payout:pay,ts});state.lastSettledMonday=mondayOf(new Date(ts)).getTime();return pay;}
-function weekBalance(){const since=lastWeekStart();let bonusRaw=0,ded=0;state.entries.forEach(en=>{if(en.ts>=since&&en.kind!=='base'){if(en.amt>0)bonusRaw+=en.amt;else ded+=Math.abs(en.amt);}});const bonus=Math.min(bonusRaw,BONUS_CAP);const capped=bonusRaw>BONUS_CAP;const total=Math.max(0,BASE_WEEKLY+bonus-ded);return{base:BASE_WEEKLY,bonus,bonusRaw,capped,ded,total};}
+function weekBalance(){
+  const since=lastWeekStart();
+  const todayS=startOfDay(new Date());
+  let bonusRaw=0,ded=0,pending=0;
+  state.entries.forEach(en=>{
+    if(en.ts<since||en.kind==='base')return;
+    const dayS=startOfDay(new Date(en.ts));
+    const checked=isCheckedIn(en.ts);
+    if(en.amt>0){
+      // 加分：只有当天签到才计入；今天未签到的加分单独归入 pending（待解锁），不进余额
+      if(checked)bonusRaw+=en.amt;
+      else if(dayS===todayS)pending+=en.amt;
+      // 过去某天未签到的加分：作废，既不计入也不算 pending
+    }else{
+      // 扣分：永远计入，签不签都算
+      ded+=Math.abs(en.amt);
+    }
+  });
+  const bonus=Math.min(bonusRaw,BONUS_CAP);
+  const capped=bonusRaw>BONUS_CAP;
+  const total=Math.max(0,BASE_WEEKLY+bonus-ded);
+  return{base:BASE_WEEKLY,bonus,bonusRaw,capped,ded,total,pending};
+}
 function checkBoundaries(before,after){
   // bonus cap just crossed
   if(after.bonusRaw>BONUS_CAP && before.bonusRaw<=BONUS_CAP){setTimeout(()=>modal({type:'alert',body:L().capAlert}),120);return;}
@@ -247,6 +304,7 @@ function render(){const wb=weekBalance();const t=L();const app=document.getEleme
       <div class="jar-label">${t.balLabel}</div>
       <div class="balance"><span class="cur">${CUR}</span>${Math.max(0,wb.total)}</div>
       <div class="week-note">${t.startsAt} <b>${CUR}${BASE_WEEKLY}</b> ${t.everyWeek}</div>
+      ${wb.pending>0?`<div class="pending-note">🔓 ${t.pendingNote(wb.pending)}</div>`:''}
       <div class="breakdown">
         <div class="b-base"><span class="num">${CUR}${wb.base}</span>${t.base}</div>
         <div class="b-bonus"><span class="num">+${wb.bonus}${wb.capped?' ⛳':''}</span>${t.earned}${wb.capped?' ('+t.cappedTag+')':''}</div>
@@ -266,12 +324,23 @@ function render(){const wb=weekBalance();const t=L();const app=document.getEleme
       const d=new Date(mon);d.setDate(mon.getDate()+i);const ds=startOfDay(d);
       const net=dayNet(ds);
       const isToday=ds===todayS;const isFuture=ds>todayS;
+      const checked=isCheckedIn(d);
+      // 过去某天有加分但没签到 → 该天加分作废，标记为 missed
+      const missedBonus=!isFuture&&!checked&&net>0;
       let cls='day';if(isToday)cls+=' today';if(isFuture)cls+=' future';
-      if(!isFuture&&net>0)cls+=' haspos';if(!isFuture&&net<0)cls+=' hasneg';
+      if(checked)cls+=' checked';
+      if(missedBonus)cls+=' missed';
+      else if(!isFuture&&net>0&&checked)cls+=' haspos';
+      if(!isFuture&&net<0)cls+=' hasneg';
       let val='';if(net>0)val=`<span class="dval up">+${net}</span>`;else if(net<0)val=`<span class="dval down">${net}</span>`;else val=`<span class="dval"></span>`;
-      cells+=`<div class="${cls}"><span class="dow">${t.dows[i]}</span><span class="dnum">${d.getDate()}</span>${val}</div>`;
+      const mark=checked?'<span class="checkmark">✓</span>':'';
+      // 非未来日期可点击：今天=签到，过去=补签/取消
+      const clickable=!isFuture?` onclick="toggleCheckin(${ds})"`:'';
+      cells+=`<div class="${cls}"${clickable}><span class="dow">${t.dows[i]}</span><span class="dnum">${d.getDate()}</span>${val}${mark}</div>`;
     }
-    return `<div class="weekcard"><div class="weekhead"><span class="month">${label}</span></div><div class="weekgrid">${cells}</div></div>`;
+    const todayChecked=isCheckedIn(now);
+    const btn=`<button class="checkin-btn ${todayChecked?'done':''}" onclick="toggleCheckin(${todayS})">${todayChecked?t.checkedIn:t.checkIn}</button>`;
+    return `<div class="weekcard"><div class="weekhead"><span class="month">${label}</span></div><div class="weekgrid">${cells}</div>${btn}</div>`;
   })()}
   <div class="sec-title"><h2>${t.earnExtra}</h2><div class="rule"></div></div>
   <div class="actions">${BONUSES.map(b=>`<button class="act bonus" onclick="addCat('${b.id}',${b.amt})">${catLabel(b)}<span class="amt">+${CUR}${b.amt}</span></button>`).join('')}</div>
