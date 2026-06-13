@@ -100,11 +100,24 @@
   .checkin-btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink);}
   .checkin-btn.done{background:var(--leaf-soft);color:var(--leaf);border-color:var(--leaf);}
   .pending-note{font-size:12px;color:var(--gold-deep);font-weight:bold;margin-top:6px;background:#f7efd8;border-radius:8px;padding:5px 8px;display:inline-block;}
+  .footer-actions{text-align:center;margin-top:18px;}
+  .pw-link{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline;padding:6px;}
   .savings-note{background:#f2ecd9;border:2px dashed var(--gold-deep);border-radius:14px;padding:13px 15px;margin-top:14px;font-size:13px;line-height:1.55;}
   .savings-note b{color:var(--gold-deep);}
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--paper);padding:12px 20px;border-radius:30px;font-weight:bold;font-size:14px;opacity:0;transition:all .25s ease;pointer-events:none;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25);}
   .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
   .loading{text-align:center;padding:60px 0;color:var(--muted);}
+  /* lock screen */
+  .lockscreen{position:fixed;inset:0;background:var(--paper);display:flex;align-items:center;justify-content:center;padding:24px;z-index:200;}
+  .lockscreen.hide{display:none;}
+  .lockbox{background:var(--card);border:3px solid var(--ink);border-radius:22px;box-shadow:6px 6px 0 var(--ink);padding:30px 26px;width:100%;max-width:320px;text-align:center;}
+  .lock-emoji{font-size:46px;line-height:1;}
+  .lock-title{font-size:20px;font-weight:bold;margin-top:10px;color:var(--ink);}
+  .lock-sub{font-size:13px;color:var(--muted);margin-top:4px;margin-bottom:18px;}
+  .lockbox input{width:100%;border:2px solid var(--ink);border-radius:12px;padding:13px 14px;font-size:18px;font-family:inherit;text-align:center;letter-spacing:3px;background:var(--card);}
+  .lock-err{color:var(--rust);font-size:13px;font-weight:bold;min-height:18px;margin-top:10px;}
+  .lock-btn{width:100%;border:2px solid var(--ink);border-radius:12px;padding:13px;font-weight:bold;font-size:15px;cursor:pointer;font-family:inherit;background:var(--gold);box-shadow:3px 3px 0 var(--ink);margin-top:6px;}
+  .lock-btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink);}
   /* in-page modal */
   .modal-mask{position:fixed;inset:0;background:rgba(26,43,31,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s ease;}
   .modal-mask.show{opacity:1;pointer-events:auto;}
@@ -121,6 +134,16 @@
 </style>
 </head>
 <body>
+<div class="lockscreen" id="lockscreen">
+  <div class="lockbox">
+    <div class="lock-emoji">🐷</div>
+    <div class="lock-title">My Pocket Money</div>
+    <div class="lock-sub">请输入密码 · Enter password</div>
+    <input type="password" id="lockInput" placeholder="••••••" autocomplete="off">
+    <div class="lock-err" id="lockErr"></div>
+    <button class="lock-btn" id="lockBtn">进入 · Enter</button>
+  </div>
+</div>
 <div class="wrap" id="app"><div class="loading">Loading… 加载中…</div></div>
 <div class="toast" id="toast"></div>
 <div class="modal-mask" id="modalMask"><div class="modal" id="modalBox"></div></div>
@@ -145,8 +168,8 @@ const DEDUCTIONS=[
   {id:'d4',en:"Broke something",zh:"损坏物品",amt:2},
 ];
 const T={
-  en:{eyebrow:"Pocket Money",forName:"for",balLabel:"This week's balance",startsAt:"Starts at",everyWeek:"every week",base:"base",earned:"earned",lost:"lost",capNote:`Bonus capped at +${CUR}${BONUS_CAP}/week · never goes below ${CUR}0`,cappedTag:"max",earnExtra:"Earn extra",loseMoney:"Lose money",addOwn:"Add your own",whatHappened:"What happened?",amtPh:"0",add:"Add",history:"History",noActivity:"No activity yet. Tap a button above to start!",weekOf:"Week",dows:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],months:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],jars:"<b>Three jars idea:</b> split each payout into <b>Spend</b>, <b>Save</b> and <b>Share</b> — e.g. 50% spend, 30% save, 20% give. Good money habits start small.",namePrompt:"Whose pocket money is this?",reasonFirst:"Add a reason first",amtFirst:"Enter an amount",addedToast:"Added 🌟",recordedToast:"Recorded",capAlert:`Heads up: this week's bonus has hit the cap of +${CUR}${BONUS_CAP}. Anything extra won't be added — the idea is to reward good habits, not turn it into a money game.`,zeroAlert:`This week's balance is now at ${CUR}0. It won't go negative, so there's nothing owed — but maybe a good moment to talk about what happened.`,weekEnded:(p)=>`Week ended — paid ${CUR}${p}`,autoSettleTitle:"New week 🌱",autoSettleBody:(p)=>`Last week was settled automatically — paid ${CUR}${p}. A fresh week has started with ${CUR}${BASE_WEEKLY}.`,checkIn:"Check in today",checkedIn:"Checked in ✓",pendingNote:(a)=>`+${CUR}${a} today — check in to add it to your balance`,checkinDone:"Nice, checked in! ✓ Today's bonus counts now.",makeupTitle:"Catch-up check-in",makeupBody:(day)=>`Mark ${day} as checked in? Bonuses from that day will then count.`,uncheckBody:(day)=>`Remove the check-in for ${day}? Bonuses from that day will stop counting.`,confirm:"Yes",cancel2:"No"},
-  zh:{eyebrow:"零花钱",forName:"宝贝：",balLabel:"本周余额",startsAt:"每周起始",everyWeek:"",base:"基础",earned:"奖励",lost:"扣除",capNote:`奖励每周封顶 +${CUR}${BONUS_CAP} · 最低不低于 ${CUR}0`,cappedTag:"封顶",earnExtra:"加分奖励",loseMoney:"扣分",addOwn:"自定义记录",whatHappened:"发生了什么？",amtPh:"0",add:"添加",history:"记录",noActivity:"还没有记录，点上面的按钮开始吧！",weekOf:"第",dows:["一","二","三","四","五","六","日"],months:["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],jars:"<b>三个罐子：</b>把每次发的钱分成 <b>花费</b>、<b>储蓄</b>、<b>分享</b> —— 例如 50% 花、30% 存、20% 送礼或捐助。好习惯从小养成。",namePrompt:"这是谁的零花钱？",reasonFirst:"请先填写原因",amtFirst:"请输入金额",addedToast:"已添加 🌟",recordedToast:"已记录",capAlert:`提醒：本周奖励已达封顶 +${CUR}${BONUS_CAP}，超出的部分不再计入。奖励是为了鼓励好习惯，而不是变成赚钱游戏哦。`,zeroAlert:`本周余额已经到 ${CUR}0 了。不会变成负数，所以不存在倒欠——但也许是个聊聊"今天发生了什么"的好时机。`,weekEnded:(p)=>`本周结束 — 已发放 ${CUR}${p}`,autoSettleTitle:"新的一周 🌱",autoSettleBody:(p)=>`上周已自动结算 — 发放 ${CUR}${p}。本周已从 ${CUR}${BASE_WEEKLY} 重新开始。`,checkIn:"今日签到",checkedIn:"今日已签到 ✓",pendingNote:(a)=>`今天还有 +${CUR}${a} 待签到解锁`,checkinDone:"签到成功！✓ 今天的加分已计入。",makeupTitle:"补签",makeupBody:(day)=>`把 ${day} 标记为已签到？那天的加分将开始计入。`,uncheckBody:(day)=>`取消 ${day} 的签到？那天的加分将不再计入。`,confirm:"确定",cancel2:"取消"}
+  en:{eyebrow:"Pocket Money",forName:"for",balLabel:"This week's balance",startsAt:"Starts at",everyWeek:"every week",base:"base",earned:"earned",lost:"lost",capNote:`Bonus capped at +${CUR}${BONUS_CAP}/week · never goes below ${CUR}0`,cappedTag:"max",earnExtra:"Earn extra",loseMoney:"Lose money",addOwn:"Add your own",whatHappened:"What happened?",amtPh:"0",add:"Add",history:"History",noActivity:"No activity yet. Tap a button above to start!",weekOf:"Week",dows:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],months:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],jars:"<b>Three jars idea:</b> split each payout into <b>Spend</b>, <b>Save</b> and <b>Share</b> — e.g. 50% spend, 30% save, 20% give. Good money habits start small.",namePrompt:"Whose pocket money is this?",reasonFirst:"Add a reason first",amtFirst:"Enter an amount",addedToast:"Added 🌟",recordedToast:"Recorded",capAlert:`Heads up: this week's bonus has hit the cap of +${CUR}${BONUS_CAP}. Anything extra won't be added — the idea is to reward good habits, not turn it into a money game.`,zeroAlert:`This week's balance is now at ${CUR}0. It won't go negative, so there's nothing owed — but maybe a good moment to talk about what happened.`,weekEnded:(p)=>`Week ended — paid ${CUR}${p}`,autoSettleTitle:"New week 🌱",autoSettleBody:(p)=>`Last week was settled automatically — paid ${CUR}${p}. A fresh week has started with ${CUR}${BASE_WEEKLY}.`,checkIn:"Check in today",checkedIn:"Checked in ✓",pendingNote:(a)=>`+${CUR}${a} today — check in to add it to your balance`,checkinDone:"Nice, checked in! ✓ Today's bonus counts now.",makeupTitle:"Catch-up check-in",makeupBody:(day)=>`Mark ${day} as checked in? Bonuses from that day will then count.`,uncheckBody:(day)=>`Remove the check-in for ${day}? Bonuses from that day will stop counting.`,confirm:"Yes",cancel2:"No",changePw:"Change password",newPwTitle:"New password",newPwBody:"Enter a new password (at least 4 characters).",confirmPwTitle:"Confirm password",confirmPwBody:"Enter the new password again.",pwTooShort:"Password too short (min 4).",pwMismatch:"The two passwords don't match.",pwChanged:"Password changed ✓"},
+  zh:{eyebrow:"零花钱",forName:"宝贝：",balLabel:"本周余额",startsAt:"每周起始",everyWeek:"",base:"基础",earned:"奖励",lost:"扣除",capNote:`奖励每周封顶 +${CUR}${BONUS_CAP} · 最低不低于 ${CUR}0`,cappedTag:"封顶",earnExtra:"加分奖励",loseMoney:"扣分",addOwn:"自定义记录",whatHappened:"发生了什么？",amtPh:"0",add:"添加",history:"记录",noActivity:"还没有记录，点上面的按钮开始吧！",weekOf:"第",dows:["一","二","三","四","五","六","日"],months:["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],jars:"<b>三个罐子：</b>把每次发的钱分成 <b>花费</b>、<b>储蓄</b>、<b>分享</b> —— 例如 50% 花、30% 存、20% 送礼或捐助。好习惯从小养成。",namePrompt:"这是谁的零花钱？",reasonFirst:"请先填写原因",amtFirst:"请输入金额",addedToast:"已添加 🌟",recordedToast:"已记录",capAlert:`提醒：本周奖励已达封顶 +${CUR}${BONUS_CAP}，超出的部分不再计入。奖励是为了鼓励好习惯，而不是变成赚钱游戏哦。`,zeroAlert:`本周余额已经到 ${CUR}0 了。不会变成负数，所以不存在倒欠——但也许是个聊聊"今天发生了什么"的好时机。`,weekEnded:(p)=>`本周结束 — 已发放 ${CUR}${p}`,autoSettleTitle:"新的一周 🌱",autoSettleBody:(p)=>`上周已自动结算 — 发放 ${CUR}${p}。本周已从 ${CUR}${BASE_WEEKLY} 重新开始。`,checkIn:"今日签到",checkedIn:"今日已签到 ✓",pendingNote:(a)=>`今天还有 +${CUR}${a} 待签到解锁`,checkinDone:"签到成功！✓ 今天的加分已计入。",makeupTitle:"补签",makeupBody:(day)=>`把 ${day} 标记为已签到？那天的加分将开始计入。`,uncheckBody:(day)=>`取消 ${day} 的签到？那天的加分将不再计入。`,confirm:"确定",cancel2:"取消",changePw:"修改密码",newPwTitle:"新密码",newPwBody:"请输入新密码（至少 4 位）。",confirmPwTitle:"确认密码",confirmPwBody:"请再次输入新密码。",pwTooShort:"密码太短（至少 4 位）。",pwMismatch:"两次输入的密码不一致。",pwChanged:"密码已修改 ✓"}
 };
 let state={name:"",lang:"bi",entries:[]};let customSign=1;
 const toast=(m)=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1600);};
@@ -225,7 +248,8 @@ function weekRangeLabel(g,isCurrent){
   return `${m[s.getMonth()]} ${s.getDate()} – ${m[e.getMonth()]} ${e.getDate()}`;
 }
 let saving=false;
-function applyDefaults(){if(!state.entries)state.entries=[];if(!state.lang)state.lang='bi';if(!state.name)state.name=defaultName();if(!state.checkins)state.checkins={};}
+const DEFAULT_PASSWORD="1234"; // 首次使用的默认密码，登录后请尽快修改
+function applyDefaults(){if(!state.entries)state.entries=[];if(!state.lang)state.lang='bi';if(!state.name)state.name=defaultName();if(!state.checkins)state.checkins={};if(!state.password)state.password=DEFAULT_PASSWORD;}
 // 把时间戳转成本地日期 key（YYYY-MM-DD），用作签到记录的键
 function dayKey(d){const x=new Date(d);return x.getFullYear()+'-'+('0'+(x.getMonth()+1)).slice(-2)+'-'+('0'+x.getDate()).slice(-2);}
 function isCheckedIn(d){return !!(state.checkins&&state.checkins[dayKey(d)]);}
@@ -249,6 +273,18 @@ async function toggleCheckin(ts){
   if(isToday)toast(L().checkinDone);
   // 签到后可能跨过封顶线，沿用既有边界提醒
   checkBoundaries(before,after);
+}
+// 仅拉取云端数据用于登录验证（不渲染、不订阅）。返回当前生效的密码。
+// 离线或云端失败时回退到本地缓存，再不行用默认密码。
+async function fetchPasswordOnly(){
+  if(sb){
+    try{
+      const {data,error}=await sb.from('pocket_money').select('data').eq('id',ROW_ID).maybeSingle();
+      if(!error&&data&&data.data){state=data.data;applyDefaults();return state.password;}
+    }catch(e){}
+  }
+  try{const c=localStorage.getItem('pmtracker:state');if(c){state=JSON.parse(c);applyDefaults();return state.password;}}catch(e){}
+  return DEFAULT_PASSWORD;
 }
 async function load(){
   try{const c=localStorage.getItem('pmtracker:state');if(c){state=JSON.parse(c);applyDefaults();render();}}catch(e){}
@@ -336,6 +372,15 @@ async function checkAutoSettle(){
 }
 function delEntry(ts){state.entries=state.entries.filter(e=>e.ts!==ts);save();render();}
 async function editName(){const n=await modal({type:'prompt',title:L().namePrompt,defaultValue:state.name});if(n&&n.trim()){state.name=n.trim();save();render();}}
+async function changePassword(){
+  const pw1=await modal({type:'prompt',title:L().newPwTitle,body:L().newPwBody,defaultValue:''});
+  if(pw1==null)return; // 取消
+  if(pw1.length<4){await modal({type:'alert',body:L().pwTooShort});return;}
+  const pw2=await modal({type:'prompt',title:L().confirmPwTitle,body:L().confirmPwBody,defaultValue:''});
+  if(pw2==null)return;
+  if(pw1!==pw2){await modal({type:'alert',body:L().pwMismatch});return;}
+  state.password=pw1;save();render();toast(L().pwChanged);
+}
 function setLang(l){state.lang=l;save();render();}
 function timeAgo(ts){const d=new Date(ts);return d.toLocaleDateString(undefined,{weekday:'short'})+' '+d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});}
 function startOfDay(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();}
@@ -405,6 +450,7 @@ function render(){const wb=weekBalance();const t=L();const app=document.getEleme
     <button class="custom-add" onclick="addCustom()">${t.add}</button>
   </div></div>
   <div class="savings-note">💡 ${t.jars}</div>
+  <div class="footer-actions"><button class="pw-link" onclick="changePassword()">🔒 ${t.changePw}</button></div>
   <div class="sec-title"><h2>${t.history}</h2><div class="rule"></div></div>
   ${(function(){
     const groups=groupByWeek();
@@ -430,7 +476,30 @@ function render(){const wb=weekBalance();const t=L();const app=document.getEleme
   })()}`;}
 function setSign(s){customSign=s;document.getElementById('signPlus').classList.toggle('on',s>0);document.getElementById('signMinus').classList.toggle('on',s<0);}
 function addCustom(){const reason=document.getElementById('cReason').value.trim();const amt=parseInt(document.getElementById('cAmt').value,10);if(!reason){toast(L().reasonFirst);return;}if(!amt||amt<=0){toast(L().amtFirst);return;}addCustomEntry(reason,customSign*amt);toast(customSign>0?L().addedToast:L().recordedToast);}
-load();
+// ===== 登录门槛 =====
+// 注意：前端密码只是简单门槛，不是真正的安全措施（密码可被读取）。
+// 真正的数据保护依赖 Supabase 的 RLS 策略。
+let unlocking=false;
+async function unlock(){
+  if(unlocking)return;
+  const inp=document.getElementById('lockInput');
+  const err=document.getElementById('lockErr');
+  const btn=document.getElementById('lockBtn');
+  const entered=inp.value;
+  unlocking=true;btn.textContent="验证中… · Checking…";err.textContent="";
+  const realPw=await fetchPasswordOnly();
+  unlocking=false;btn.textContent="进入 · Enter";
+  if(entered===realPw){
+    document.getElementById('lockscreen').classList.add('hide');
+    load();
+  }else{
+    err.textContent="密码不对 · Wrong password";
+    inp.value="";inp.focus();
+  }
+}
+document.getElementById('lockBtn').addEventListener('click',unlock);
+document.getElementById('lockInput').addEventListener('keydown',(e)=>{if(e.key==='Enter')unlock();});
+document.getElementById('lockInput').focus();
 </script>
 </body>
 </html>
