@@ -81,6 +81,16 @@
   .weekbar button{flex:1;border:2px solid var(--ink);border-radius:12px;padding:12px;font-weight:bold;font-size:13px;cursor:pointer;font-family:inherit;background:var(--card);box-shadow:3px 3px 0 var(--ink);}
   .weekbar button:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink);}
   .weekbar .endweek{background:var(--gold);}
+  .backupbar{display:flex;gap:8px;margin-top:10px;}
+  .backupbar button{flex:1;border:2px solid var(--ink);border-radius:12px;padding:10px 6px;font-weight:bold;font-size:12px;cursor:pointer;font-family:inherit;background:var(--card);box-shadow:3px 3px 0 var(--ink);}
+  .backupbar button:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink);}
+  .iobox{margin-top:10px;display:none;}
+  .iobox.show{display:block;}
+  .iobox textarea{width:100%;height:120px;border:2px solid var(--ink);border-radius:12px;padding:10px;font-size:12px;font-family:'Courier New',monospace;background:var(--card);resize:vertical;}
+  .iobox .iorow{display:flex;gap:8px;margin-top:8px;}
+  .iobox .iorow button{flex:1;border:2px solid var(--ink);border-radius:10px;padding:9px;font-weight:bold;font-size:12px;cursor:pointer;font-family:inherit;background:var(--gold);box-shadow:3px 3px 0 var(--ink);}
+  .iobox .iorow button.ghost{background:var(--card);}
+  .iobox .iorow button:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink);}
   .savings-note{background:#f2ecd9;border:2px dashed var(--gold-deep);border-radius:14px;padding:13px 15px;margin-top:14px;font-size:13px;line-height:1.55;}
   .savings-note b{color:var(--gold-deep);}
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--paper);padding:12px 20px;border-radius:30px;font-weight:bold;font-size:14px;opacity:0;transition:all .25s ease;pointer-events:none;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25);}
@@ -91,7 +101,12 @@
 <body>
 <div class="wrap" id="app"><div class="loading">Loading… 加载中…</div></div>
 <div class="toast" id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const SUPABASE_URL="https://xsortbbwqpjbhfobdvvi.supabase.co";
+const SUPABASE_KEY="sb_publishable_dmqevq0fHiPngqeNDEhZtw_0Yd4BcIM";
+const ROW_ID="family";
+let sb=null;try{sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);}catch(e){}
 const BASE_WEEKLY=10;const CUR="$";const BONUS_CAP=10;
 const BONUSES=[
   {id:'b1',en:"Daily chore done",zh:"完成日常家务",amt:1},
@@ -107,8 +122,8 @@ const DEDUCTIONS=[
   {id:'d4',en:"Broke something",zh:"损坏物品",amt:2},
 ];
 const T={
-  en:{eyebrow:"Pocket Money",forName:"for",balLabel:"This week's balance",startsAt:"Starts at",everyWeek:"every week",base:"base",earned:"earned",lost:"lost",capNote:`Bonus capped at +${CUR}${BONUS_CAP}/week · never goes below ${CUR}0`,cappedTag:"max",earnExtra:"Earn extra",loseMoney:"Lose money",addOwn:"Add your own",whatHappened:"What happened?",amtPh:"0",add:"Add",endWeek:"End week & pay out",history:"History",noActivity:"No activity yet. Tap a button above to start!",weekOf:"Week",dows:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],months:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],jars:"<b>Three jars idea:</b> split each payout into <b>Spend</b>, <b>Save</b> and <b>Share</b> — e.g. 50% spend, 30% save, 20% give. Good money habits start small.",namePrompt:"Whose pocket money is this?",reasonFirst:"Add a reason first",amtFirst:"Enter an amount",addedToast:"Added 🌟",recordedToast:"Recorded",newWeekToast:"New week started 🌱",capAlert:`Heads up: this week's bonus has hit the cap of +${CUR}${BONUS_CAP}. Anything extra won't be added — the idea is to reward good habits, not turn it into a money game.`,zeroAlert:`This week's balance is now at ${CUR}0. It won't go negative, so there's nothing owed — but maybe a good moment to talk about what happened.`,endConfirm:(t,b)=>`End this week?\n\nThis week's total: ${CUR}${t}\nThat amount gets paid out, and a fresh week starts with ${CUR}${b}.`,weekEnded:(p)=>`Week ended — paid ${CUR}${p}`},
-  zh:{eyebrow:"零花钱",forName:"宝贝：",balLabel:"本周余额",startsAt:"每周起始",everyWeek:"",base:"基础",earned:"奖励",lost:"扣除",capNote:`奖励每周封顶 +${CUR}${BONUS_CAP} · 最低不低于 ${CUR}0`,cappedTag:"封顶",earnExtra:"加分奖励",loseMoney:"扣分",addOwn:"自定义记录",whatHappened:"发生了什么？",amtPh:"0",add:"添加",endWeek:"结束本周并发放",history:"记录",noActivity:"还没有记录，点上面的按钮开始吧！",weekOf:"第",dows:["一","二","三","四","五","六","日"],months:["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],jars:"<b>三个罐子：</b>把每次发的钱分成 <b>花费</b>、<b>储蓄</b>、<b>分享</b> —— 例如 50% 花、30% 存、20% 送礼或捐助。好习惯从小养成。",namePrompt:"这是谁的零花钱？",reasonFirst:"请先填写原因",amtFirst:"请输入金额",addedToast:"已添加 🌟",recordedToast:"已记录",newWeekToast:"新的一周开始啦 🌱",capAlert:`提醒：本周奖励已达封顶 +${CUR}${BONUS_CAP}，超出的部分不再计入。奖励是为了鼓励好习惯，而不是变成赚钱游戏哦。`,zeroAlert:`本周余额已经到 ${CUR}0 了。不会变成负数，所以不存在倒欠——但也许是个聊聊"今天发生了什么"的好时机。`,endConfirm:(t,b)=>`结束本周？\n\n本周合计：${CUR}${t}\n这笔钱将发放，下周从 ${CUR}${b} 重新开始。`,weekEnded:(p)=>`本周结束 — 已发放 ${CUR}${p}`}
+  en:{eyebrow:"Pocket Money",forName:"for",balLabel:"This week's balance",startsAt:"Starts at",everyWeek:"every week",base:"base",earned:"earned",lost:"lost",capNote:`Bonus capped at +${CUR}${BONUS_CAP}/week · never goes below ${CUR}0`,cappedTag:"max",earnExtra:"Earn extra",loseMoney:"Lose money",addOwn:"Add your own",whatHappened:"What happened?",amtPh:"0",add:"Add",endWeek:"End week & pay out",history:"History",noActivity:"No activity yet. Tap a button above to start!",weekOf:"Week",dows:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],months:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],backup:"Backup",download:"Download .json",copy:"Copy text",importBtn:"Import",ioExportHint:"Your data as text — save it, send it to yourself, or paste into GitHub.",ioImportHint:"Paste a backup here, then tap Import to restore.",doImport:"Import this",cancel:"Close",copied:"Copied ✓",imported:"Restored ✓",badJson:"Couldn't read that backup — check the text.",confirmImport:"Replace all current data with this backup?",downloaded:"Saved file ✓",jars:"<b>Three jars idea:</b> split each payout into <b>Spend</b>, <b>Save</b> and <b>Share</b> — e.g. 50% spend, 30% save, 20% give. Good money habits start small.",namePrompt:"Whose pocket money is this?",reasonFirst:"Add a reason first",amtFirst:"Enter an amount",addedToast:"Added 🌟",recordedToast:"Recorded",newWeekToast:"New week started 🌱",capAlert:`Heads up: this week's bonus has hit the cap of +${CUR}${BONUS_CAP}. Anything extra won't be added — the idea is to reward good habits, not turn it into a money game.`,zeroAlert:`This week's balance is now at ${CUR}0. It won't go negative, so there's nothing owed — but maybe a good moment to talk about what happened.`,endConfirm:(t,b)=>`End this week?\n\nThis week's total: ${CUR}${t}\nThat amount gets paid out, and a fresh week starts with ${CUR}${b}.`,weekEnded:(p)=>`Week ended — paid ${CUR}${p}`},
+  zh:{eyebrow:"零花钱",forName:"宝贝：",balLabel:"本周余额",startsAt:"每周起始",everyWeek:"",base:"基础",earned:"奖励",lost:"扣除",capNote:`奖励每周封顶 +${CUR}${BONUS_CAP} · 最低不低于 ${CUR}0`,cappedTag:"封顶",earnExtra:"加分奖励",loseMoney:"扣分",addOwn:"自定义记录",whatHappened:"发生了什么？",amtPh:"0",add:"添加",endWeek:"结束本周并发放",history:"记录",noActivity:"还没有记录，点上面的按钮开始吧！",weekOf:"第",dows:["一","二","三","四","五","六","日"],months:["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],backup:"备份",download:"下载 .json",copy:"复制文本",importBtn:"导入",ioExportHint:"这是你的数据文本——可保存、发给自己、或粘到 GitHub 备份。",ioImportHint:"把备份文本粘到这里，再点「导入此数据」恢复。",doImport:"导入此数据",cancel:"关闭",copied:"已复制 ✓",imported:"已恢复 ✓",badJson:"读取失败——请检查文本是否完整。",confirmImport:"用这份备份覆盖当前所有数据？",downloaded:"已保存文件 ✓",jars:"<b>三个罐子：</b>把每次发的钱分成 <b>花费</b>、<b>储蓄</b>、<b>分享</b> —— 例如 50% 花、30% 存、20% 送礼或捐助。好习惯从小养成。",namePrompt:"这是谁的零花钱？",reasonFirst:"请先填写原因",amtFirst:"请输入金额",addedToast:"已添加 🌟",recordedToast:"已记录",newWeekToast:"新的一周开始啦 🌱",capAlert:`提醒：本周奖励已达封顶 +${CUR}${BONUS_CAP}，超出的部分不再计入。奖励是为了鼓励好习惯，而不是变成赚钱游戏哦。`,zeroAlert:`本周余额已经到 ${CUR}0 了。不会变成负数，所以不存在倒欠——但也许是个聊聊"今天发生了什么"的好时机。`,endConfirm:(t,b)=>`结束本周？\n\n本周合计：${CUR}${t}\n这笔钱将发放，下周从 ${CUR}${b} 重新开始。`,weekEnded:(p)=>`本周结束 — 已发放 ${CUR}${p}`}
 };
 let state={name:"",lang:"bi",entries:[]};let customSign=1;
 const toast=(m)=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1600);};
@@ -116,8 +131,39 @@ function L(){return state.lang==='zh'?T.zh:T.en;}
 function defaultName(){return state.lang==='zh'?"我的孩子":"my son";}
 function catLabel(it){if(state.lang==='en')return `<span class="lbl">${it.en}</span>`;if(state.lang==='zh')return `<span class="lbl">${it.zh}</span>`;return `<span class="lbl">${it.en}<small>${it.zh}</small></span>`;}
 function reasonText(en){const all=[...BONUSES,...DEDUCTIONS];if(en.kind==='cat'){const it=all.find(x=>x.id===en.refId);if(it){if(state.lang==='en')return it.en;if(state.lang==='zh')return it.zh;return it.en+' · '+it.zh;}}if(en.kind==='base')return en.payout!=null?L().weekEnded(en.payout):'';return en.reason;}
-function load(){try{const r=localStorage.getItem('pmtracker:state');if(r)state=JSON.parse(r);}catch(e){}if(!state.entries)state.entries=[];if(!state.lang)state.lang='bi';if(!state.name)state.name=defaultName();render();}
-function save(){try{localStorage.setItem('pmtracker:state',JSON.stringify(state));}catch(e){toast("Couldn't save 保存失败");}}
+let saving=false;
+function applyDefaults(){if(!state.entries)state.entries=[];if(!state.lang)state.lang='bi';if(!state.name)state.name=defaultName();}
+async function load(){
+  try{const c=localStorage.getItem('pmtracker:state');if(c){state=JSON.parse(c);applyDefaults();render();}}catch(e){}
+  if(!sb){applyDefaults();render();toast("Offline 离线模式");return;}
+  try{
+    const {data,error}=await sb.from('pocket_money').select('data').eq('id',ROW_ID).maybeSingle();
+    if(error)throw error;
+    if(data&&data.data){state=data.data;}
+    applyDefaults();
+    try{localStorage.setItem('pmtracker:state',JSON.stringify(state));}catch(e){}
+    render();
+    subscribeRealtime();
+  }catch(e){applyDefaults();render();toast("Cloud offline 云端连接失败");}
+}
+async function save(){
+  applyDefaults();
+  try{localStorage.setItem('pmtracker:state',JSON.stringify(state));}catch(e){}
+  if(!sb)return;
+  try{
+    saving=true;
+    const {error}=await sb.from('pocket_money').upsert({id:ROW_ID,data:state,updated_at:new Date().toISOString()});
+    if(error)throw error;
+  }catch(e){toast("Couldn't sync 同步失败");}
+  finally{setTimeout(()=>{saving=false;},400);}
+}
+function subscribeRealtime(){
+  if(!sb||subscribeRealtime._done)return;subscribeRealtime._done=true;
+  sb.channel('pm').on('postgres_changes',{event:'*',schema:'public',table:'pocket_money',filter:'id=eq.'+ROW_ID},(payload)=>{
+    if(saving)return;
+    if(payload.new&&payload.new.data){state=payload.new.data;applyDefaults();try{localStorage.setItem('pmtracker:state',JSON.stringify(state));}catch(e){}render();}
+  }).subscribe();
+}
 function lastWeekStart(){for(const en of state.entries){if(en.kind==='base')return en.ts;}return 0;}
 function weekBalance(){const since=lastWeekStart();let bonusRaw=0,ded=0;state.entries.forEach(en=>{if(en.ts>=since&&en.kind!=='base'){if(en.amt>0)bonusRaw+=en.amt;else ded+=Math.abs(en.amt);}});const bonus=Math.min(bonusRaw,BONUS_CAP);const capped=bonusRaw>BONUS_CAP;const total=Math.max(0,BASE_WEEKLY+bonus-ded);return{base:BASE_WEEKLY,bonus,bonusRaw,capped,ded,total};}
 function checkBoundaries(before,after){
@@ -132,6 +178,12 @@ function endWeek(){const wb=weekBalance();const pay=Math.max(0,wb.total);if(!con
 function delEntry(ts){state.entries=state.entries.filter(e=>e.ts!==ts);save();render();}
 function editName(){const n=prompt(L().namePrompt,state.name);if(n&&n.trim()){state.name=n.trim();save();render();}}
 function setLang(l){state.lang=l;save();render();}
+let ioMode=null;
+function toggleIO(mode){ioMode=(ioMode===mode)?null:mode;render();if(ioMode==='export'){const ta=document.getElementById('ioText');if(ta)ta.value=JSON.stringify(state,null,2);}}
+function downloadJson(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');const d=new Date();const stamp=d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2);a.href=url;a.download='pocket-money-'+stamp+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);toast(L().downloaded);}
+function copyJson(){const txt=JSON.stringify(state,null,2);const done=()=>toast(L().copied);if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>{fallbackCopy(txt);done();});}else{fallbackCopy(txt);done();}}
+function fallbackCopy(txt){const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);}
+function doImport(){const ta=document.getElementById('ioText');if(!ta)return;let parsed;try{parsed=JSON.parse(ta.value);}catch(e){toast(L().badJson);return;}if(!parsed||!Array.isArray(parsed.entries)){toast(L().badJson);return;}if(!confirm(L().confirmImport))return;state={name:parsed.name||defaultName(),lang:parsed.lang||state.lang,entries:parsed.entries};ioMode=null;save();render();toast(L().imported);}
 function timeAgo(ts){const d=new Date(ts);return d.toLocaleDateString(undefined,{weekday:'short'})+' '+d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});}
 function startOfDay(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();}
 function mondayOf(d){const x=new Date(d);const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);x.setHours(0,0,0,0);return x;}
@@ -189,6 +241,19 @@ function render(){const wb=weekBalance();const t=L();const app=document.getEleme
   </div></div>
   <div class="weekbar"><button class="endweek" onclick="endWeek()">${t.endWeek}</button></div>
   <div class="savings-note">💡 ${t.jars}</div>
+  <div class="backupbar">
+    <button onclick="downloadJson()">⬇ ${t.download}</button>
+    <button onclick="copyJson()">⧉ ${t.copy}</button>
+    <button onclick="toggleIO('import')">⬆ ${t.importBtn}</button>
+  </div>
+  ${ioMode?`<div class="iobox show">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">${ioMode==='import'?t.ioImportHint:t.ioExportHint}</div>
+    <textarea id="ioText" placeholder='{ "entries": [...] }'></textarea>
+    <div class="iorow">
+      ${ioMode==='import'?`<button onclick="doImport()">${t.doImport}</button>`:''}
+      <button class="ghost" onclick="toggleIO('${ioMode}')">${t.cancel}</button>
+    </div>
+  </div>`:''}
   <div class="sec-title"><h2>${t.history}</h2><div class="rule"></div></div>
   <ul class="ledger">${state.entries.length===0?`<div class="empty">${t.noActivity}</div>`:state.entries.map(en=>{const cls=en.kind==='base'?'base':(en.amt>0?'up':'down');const sign=en.amt>0?'+':'−';const dcls=en.amt>0?'up':'down';const icon=en.kind==='base'?'★':(en.amt>0?'↑':'↓');return `<li><div class="icon ${cls}">${icon}</div><div class="info"><div class="reason">${reasonText(en)}</div><div class="when">${timeAgo(en.ts)}</div></div><div class="delta ${dcls}">${sign}${CUR}${Math.abs(en.amt)}</div><button class="del" onclick="delEntry(${en.ts})">×</button></li>`;}).join('')}</ul>`;}
 function setSign(s){customSign=s;document.getElementById('signPlus').classList.toggle('on',s>0);document.getElementById('signMinus').classList.toggle('on',s<0);}
