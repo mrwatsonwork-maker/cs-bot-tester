@@ -60,6 +60,18 @@
   .ledger .delta{font-weight:bold;font-size:15px;white-space:nowrap;}
   .ledger .delta.up{color:var(--leaf);}.ledger .delta.down{color:var(--rust);}
   .ledger .del{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 4px;line-height:1;}
+  .weekgroup{margin-bottom:10px;}
+  .wk-head{width:100%;display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--ink);border-radius:12px;padding:11px 13px;cursor:pointer;font-family:inherit;text-align:left;box-shadow:3px 3px 0 var(--ink);}
+  .wk-head:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink);}
+  .wk-caret{font-size:13px;color:var(--muted);transition:transform .18s ease;flex-shrink:0;}
+  .weekgroup.open .wk-caret{transform:rotate(90deg);}
+  .wk-title{flex:1;font-size:14px;font-weight:bold;color:var(--ink);line-height:1.25;}
+  .wk-title small{display:block;font-weight:normal;color:var(--muted);font-size:11px;}
+  .wk-paid{font-size:12px;font-weight:bold;color:var(--gold-deep);background:#f2ecd9;border-radius:8px;padding:3px 9px;white-space:nowrap;}
+  .wk-current{font-size:12px;font-weight:bold;color:var(--leaf);background:var(--leaf-soft);border-radius:8px;padding:3px 9px;white-space:nowrap;}
+  .wk-body{display:none;padding-top:8px;}
+  .weekgroup.open .wk-body{display:block;}
+  .wk-empty{text-align:center;color:var(--muted);font-size:13px;padding:14px 0;}
   .empty{text-align:center;color:var(--muted);font-size:14px;padding:24px 0;}
   /* week strip */
   .weekcard{background:var(--card);border:2px solid var(--ink);border-radius:18px;padding:14px 14px 16px;margin-top:16px;box-shadow:4px 4px 0 var(--ink);}
@@ -173,6 +185,45 @@ function L(){return state.lang==='zh'?T.zh:T.en;}
 function defaultName(){return state.lang==='zh'?"我的孩子":"my son";}
 function catLabel(it){if(state.lang==='en')return `<span class="lbl">${it.en}</span>`;if(state.lang==='zh')return `<span class="lbl">${it.zh}</span>`;return `<span class="lbl">${it.en}<small>${it.zh}</small></span>`;}
 function reasonText(en){const all=[...BONUSES,...DEDUCTIONS];if(en.kind==='cat'){const it=all.find(x=>x.id===en.refId);if(it){if(state.lang==='en')return it.en;if(state.lang==='zh')return it.zh;return it.en+' · '+it.zh;}}if(en.kind==='base')return en.payout!=null?L().weekEnded(en.payout):'';return en.reason;}
+// 记录倒序（最新在前）。base 记录的 payout = 它结算的那一周（时间上更早、即数组中其后的记录）的发放额。
+// 第 0 组是当前进行中的本周（最新、尚无 base 结算）。
+function groupByWeek(){
+  const groups=[];let cur={items:[],payout:null,paidAt:null};
+  for(const en of state.entries){
+    if(en.kind==='base'){
+      // 当前累积的这组到此结束（它是更晚的一周），下一条 base 才是它的结算点……
+      // 但更晚的一周此时尚未被结算，所以它的 payout 留空；
+      // 而这条 base 的 payout 属于"接下来要累积的更早那一周"。
+      groups.push(cur);
+      cur={items:[],payout:en.payout,paidAt:en.ts};
+    }else{
+      cur.items.push(en);
+    }
+  }
+  groups.push(cur);
+  groups.forEach(g=>{
+    const allTs=g.items.map(i=>i.ts).concat(g.paidAt?[g.paidAt]:[]);
+    g.startTs=allTs.length?Math.min(...allTs):null;
+    g.endTs=allTs.length?Math.max(...allTs):null;
+  });
+  // 过滤掉完全空的组（既无记录也无发放）
+  return groups.filter(g=>g.items.length||g.payout!=null);
+}
+let expandedWeeks={};
+function toggleWeek(idx){expandedWeeks[idx]=!expandedWeeks[idx];render();}
+function weekRangeLabel(g,isCurrent){
+  let s,e;
+  if(isCurrent){
+    // 本周用固定日历周（周一到周日），跟上方日历卡片一致
+    s=mondayOf(new Date());e=new Date(s);e.setDate(s.getDate()+6);
+  }else{
+    if(!g.startTs)return'';
+    s=new Date(g.startTs);e=new Date(g.endTs);
+  }
+  const m=L().months;
+  if(state.lang==='zh')return `${m[s.getMonth()]}${s.getDate()}日 – ${m[e.getMonth()]}${e.getDate()}日`;
+  return `${m[s.getMonth()]} ${s.getDate()} – ${m[e.getMonth()]} ${e.getDate()}`;
+}
 let saving=false;
 function applyDefaults(){if(!state.entries)state.entries=[];if(!state.lang)state.lang='bi';if(!state.name)state.name=defaultName();if(!state.checkins)state.checkins={};}
 // 把时间戳转成本地日期 key（YYYY-MM-DD），用作签到记录的键
@@ -355,7 +406,28 @@ function render(){const wb=weekBalance();const t=L();const app=document.getEleme
   </div></div>
   <div class="savings-note">💡 ${t.jars}</div>
   <div class="sec-title"><h2>${t.history}</h2><div class="rule"></div></div>
-  <ul class="ledger">${state.entries.length===0?`<div class="empty">${t.noActivity}</div>`:state.entries.map(en=>{const cls=en.kind==='base'?'base':(en.amt>0?'up':'down');const sign=en.amt>0?'+':'−';const dcls=en.amt>0?'up':'down';const icon=en.kind==='base'?'★':(en.amt>0?'↑':'↓');return `<li><div class="icon ${cls}">${icon}</div><div class="info"><div class="reason">${reasonText(en)}</div><div class="when">${timeAgo(en.ts)}</div></div><div class="delta ${dcls}">${sign}${CUR}${Math.abs(en.amt)}</div><button class="del" onclick="delEntry(${en.ts})">×</button></li>`;}).join('')}</ul>`;}
+  ${(function(){
+    const groups=groupByWeek();
+    if(groups.length===0||groups.every(g=>g.items.length===0))return `<div class="empty">${t.noActivity}</div>`;
+    return groups.map((g,idx)=>{
+      const isCurrent=idx===0;
+      const open=isCurrent?(expandedWeeks[idx]!==false):(expandedWeeks[idx]===true);
+      const range=weekRangeLabel(g,isCurrent);
+      const paidTag=g.payout!=null?`<span class="wk-paid">${state.lang==='en'?'Paid':'已发'} ${CUR}${g.payout}</span>`:(isCurrent?`<span class="wk-current">${state.lang==='en'?'In progress':'进行中'}</span>`:'');
+      const title=isCurrent?(state.lang==='en'?'This week':'本周'):range;
+      const sub=isCurrent&&range?range:'';
+      const rows=g.items.map(en=>{const cls=en.amt>0?'up':'down';const sign=en.amt>0?'+':'−';const icon=en.amt>0?'↑':'↓';return `<li><div class="icon ${cls}">${icon}</div><div class="info"><div class="reason">${reasonText(en)}</div><div class="when">${timeAgo(en.ts)}</div></div><div class="delta ${cls}">${sign}${CUR}${Math.abs(en.amt)}</div><button class="del" onclick="delEntry(${en.ts})">×</button></li>`;}).join('');
+      const body=g.items.length?`<ul class="ledger">${rows}</ul>`:`<div class="wk-empty">${state.lang==='en'?'No activity this week':'本周暂无记录'}</div>`;
+      return `<div class="weekgroup ${open?'open':''}">
+        <button class="wk-head" onclick="toggleWeek(${idx})">
+          <span class="wk-caret">▸</span>
+          <span class="wk-title">${title}${sub?`<small>${sub}</small>`:''}</span>
+          ${paidTag}
+        </button>
+        <div class="wk-body">${body}</div>
+      </div>`;
+    }).join('');
+  })()}`;}
 function setSign(s){customSign=s;document.getElementById('signPlus').classList.toggle('on',s>0);document.getElementById('signMinus').classList.toggle('on',s<0);}
 function addCustom(){const reason=document.getElementById('cReason').value.trim();const amt=parseInt(document.getElementById('cAmt').value,10);if(!reason){toast(L().reasonFirst);return;}if(!amt||amt<=0){toast(L().amtFirst);return;}addCustomEntry(reason,customSign*amt);toast(customSign>0?L().addedToast:L().recordedToast);}
 load();
