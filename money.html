@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>My Pocket Money · 零花钱</title>
+<style>
+  :root{
+    --ink:#1a2b1f;--paper:#fbf7ec;--card:#ffffff;--gold:#e6a817;--gold-deep:#c8870a;
+    --leaf:#3f8a4f;--leaf-soft:#e4f0e6;--rust:#c44a3a;--rust-soft:#f7e3e0;--muted:#7d8a7f;--line:#e7e0cf;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Trebuchet MS','PingFang SC','Microsoft YaHei','Segoe UI',system-ui,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;padding:0 0 40px;}
+  .wrap{max-width:480px;margin:0 auto;padding:0 18px;}
+  .langbar{display:flex;gap:6px;justify-content:center;padding:16px 0 0;}
+  .langbar button{border:2px solid var(--ink);background:var(--card);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:bold;cursor:pointer;font-family:inherit;color:var(--ink);}
+  .langbar button.on{background:var(--ink);color:var(--paper);}
+  header{text-align:center;padding:14px 0 10px;}
+  .eyebrow{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--leaf);font-weight:bold;}
+  .kidname{font-size:15px;color:var(--muted);margin-top:2px;}
+  .kidname span{border-bottom:1px dashed var(--line);cursor:pointer;}
+  .jar{background:var(--card);border:3px solid var(--ink);border-radius:22px;padding:22px 20px 24px;margin-top:16px;box-shadow:6px 6px 0 var(--ink);position:relative;}
+  .jar-label{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+  .balance{font-size:62px;font-weight:bold;line-height:1;margin:6px 0 2px;letter-spacing:-2px;}
+  .balance .cur{font-size:30px;vertical-align:top;color:var(--gold-deep);}
+  .week-note{font-size:13px;color:var(--muted);}
+  .week-note b{color:var(--leaf);}
+  .breakdown{display:flex;justify-content:center;gap:18px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:13px;}
+  .breakdown div{text-align:center;}
+  .breakdown .num{font-size:19px;font-weight:bold;display:block;}
+  .b-base .num{color:var(--ink);}.b-bonus .num{color:var(--leaf);}.b-ded .num{color:var(--rust);}
+  .sec-title{display:flex;align-items:center;gap:10px;margin:26px 0 12px;}
+  .sec-title h2{font-size:16px;letter-spacing:0.5px;}
+  .sec-title .rule{flex:1;height:2px;background:var(--line);}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .act{border:2px solid var(--ink);border-radius:14px;background:var(--card);padding:13px 12px;text-align:left;cursor:pointer;transition:transform .08s ease, box-shadow .08s ease;box-shadow:3px 3px 0 var(--ink);}
+  .act:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink);}
+  .act .lbl{font-size:14px;font-weight:bold;display:block;line-height:1.25;}
+  .act .lbl small{font-weight:normal;color:var(--muted);font-size:11px;display:block;}
+  .act .amt{font-size:13px;font-weight:bold;margin-top:5px;display:inline-block;}
+  .act.bonus{background:var(--leaf-soft);}.act.bonus .amt{color:var(--leaf);}
+  .act.deduct{background:var(--rust-soft);}.act.deduct .amt{color:var(--rust);}
+  .custom-row{grid-column:1 / -1;display:flex;gap:8px;align-items:stretch;margin-top:2px;}
+  .custom-row input[type=text]{flex:1;border:2px solid var(--ink);border-radius:12px;padding:11px 12px;font-size:14px;font-family:inherit;background:var(--card);min-width:0;}
+  .custom-row input[type=number]{width:74px;border:2px solid var(--ink);border-radius:12px;padding:11px 8px;font-size:14px;font-family:inherit;text-align:center;background:var(--card);}
+  .custom-row .pm{display:flex;flex-direction:column;border:2px solid var(--ink);border-radius:12px;overflow:hidden;}
+  .custom-row .pm button{border:none;background:var(--card);font-weight:bold;width:34px;flex:1;cursor:pointer;font-size:16px;}
+  .custom-row .pm button.on{background:var(--ink);color:var(--paper);}
+  .custom-add{border:2px solid var(--ink);border-radius:12px;background:var(--gold);font-weight:bold;padding:0 16px;cursor:pointer;font-size:14px;box-shadow:3px 3px 0 var(--ink);white-space:nowrap;}
+  .custom-add:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink);}
+  .ledger{list-style:none;}
+  .ledger li{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+  .ledger .icon{width:30px;height:30px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:16px;}
+  .ledger .icon.up{background:var(--leaf-soft);color:var(--leaf);}
+  .ledger .icon.down{background:var(--rust-soft);color:var(--rust);}
+  .ledger .icon.base{background:#f2ecd9;color:var(--gold-deep);}
+  .ledger .info{flex:1;min-width:0;}
+  .ledger .info .reason{font-size:14px;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ledger .info .when{font-size:11px;color:var(--muted);}
+  .ledger .delta{font-weight:bold;font-size:15px;white-space:nowrap;}
+  .ledger .delta.up{color:var(--leaf);}.ledger .delta.down{color:var(--rust);}
+  .ledger .del{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 4px;line-height:1;}
+  .empty{text-align:center;color:var(--muted);font-size:14px;padding:24px 0;}
+  /* week strip */
+  .weekcard{background:var(--card);border:2px solid var(--ink);border-radius:18px;padding:14px 14px 16px;margin-top:16px;box-shadow:4px 4px 0 var(--ink);}
+  .weekhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;}
+  .weekhead .month{font-size:15px;font-weight:bold;}
+  .weekhead .wk{font-size:12px;color:var(--muted);letter-spacing:0.5px;}
+  .weekgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .day{border:1.5px solid var(--line);border-radius:10px;padding:6px 2px 7px;text-align:center;min-height:58px;display:flex;flex-direction:column;justify-content:space-between;}
+  .day .dow{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+  .day .dnum{font-size:15px;font-weight:bold;line-height:1.1;margin-top:1px;}
+  .day .dval{font-size:11px;font-weight:bold;margin-top:3px;min-height:14px;}
+  .day .dval.up{color:var(--leaf);}.day .dval.down{color:var(--rust);}
+  .day.today{border-color:var(--ink);border-width:2.5px;background:#fff;box-shadow:2px 2px 0 var(--ink);}
+  .day.today .dow{color:var(--leaf);}
+  .day.future{opacity:0.4;}
+  .day.haspos{background:var(--leaf-soft);}
+  .day.hasneg{background:var(--rust-soft);}
+  .weekbar{display:flex;gap:10px;margin-top:6px;}
+  .weekbar button{flex:1;border:2px solid var(--ink);border-radius:12px;padding:12px;font-weight:bold;font-size:13px;cursor:pointer;font-family:inherit;background:var(--card);box-shadow:3px 3px 0 var(--ink);}
+  .weekbar button:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink);}
+  .weekbar .endweek{background:var(--gold);}
+  .savings-note{background:#f2ecd9;border:2px dashed var(--gold-deep);border-radius:14px;padding:13px 15px;margin-top:14px;font-size:13px;line-height:1.55;}
+  .savings-note b{color:var(--gold-deep);}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--paper);padding:12px 20px;border-radius:30px;font-weight:bold;font-size:14px;opacity:0;transition:all .25s ease;pointer-events:none;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25);}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+  .loading{text-align:center;padding:60px 0;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="loading">Loading… 加载中…</div></div>
+<div class="toast" id="toast"></div>
+<script>
+const BASE_WEEKLY=10;const CUR="$";const BONUS_CAP=10;
+const BONUSES=[
+  {id:'b1',en:"Daily chore done",zh:"完成日常家务",amt:1},
+  {id:'b2',en:"Extra chore (no asking)",zh:"主动做额外家务",amt:2},
+  {id:'b3',en:"Extra study / reading",zh:"额外学习 / 阅读",amt:2},
+  {id:'b4',en:"Big school progress",zh:"学习明显进步",amt:4},
+  {id:'b5',en:"Helped someone",zh:"帮助了他人",amt:2},
+];
+const DEDUCTIONS=[
+  {id:'d1',en:"Not honest",zh:"不诚实",amt:3},
+  {id:'d2',en:"Disrespect / temper",zh:"不尊重 / 发脾气",amt:2},
+  {id:'d3',en:"Skipped responsibility",zh:"没尽到责任",amt:1},
+  {id:'d4',en:"Broke something",zh:"损坏物品",amt:2},
+];
+const T={
+  en:{eyebrow:"Pocket Money",forName:"for",balLabel:"This week's balance",startsAt:"Starts at",everyWeek:"every week",base:"base",earned:"earned",lost:"lost",capNote:`Bonus capped at +${CUR}${BONUS_CAP}/week · never goes below ${CUR}0`,cappedTag:"max",earnExtra:"Earn extra",loseMoney:"Lose money",addOwn:"Add your own",whatHappened:"What happened?",amtPh:"0",add:"Add",endWeek:"End week & pay out",history:"History",noActivity:"No activity yet. Tap a button above to start!",weekOf:"Week",dows:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],months:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],jars:"<b>Three jars idea:</b> split each payout into <b>Spend</b>, <b>Save</b> and <b>Share</b> — e.g. 50% spend, 30% save, 20% give. Good money habits start small.",namePrompt:"Whose pocket money is this?",reasonFirst:"Add a reason first",amtFirst:"Enter an amount",addedToast:"Added 🌟",recordedToast:"Recorded",newWeekToast:"New week started 🌱",capAlert:`Heads up: this week's bonus has hit the cap of +${CUR}${BONUS_CAP}. Anything extra won't be added — the idea is to reward good habits, not turn it into a money game.`,zeroAlert:`This week's balance is now at ${CUR}0. It won't go negative, so there's nothing owed — but maybe a good moment to talk about what happened.`,endConfirm:(t,b)=>`End this week?\n\nThis week's total: ${CUR}${t}\nThat amount gets paid out, and a fresh week starts with ${CUR}${b}.`,weekEnded:(p)=>`Week ended — paid ${CUR}${p}`},
+  zh:{eyebrow:"零花钱",forName:"宝贝：",balLabel:"本周余额",startsAt:"每周起始",everyWeek:"",base:"基础",earned:"奖励",lost:"扣除",capNote:`奖励每周封顶 +${CUR}${BONUS_CAP} · 最低不低于 ${CUR}0`,cappedTag:"封顶",earnExtra:"加分奖励",loseMoney:"扣分",addOwn:"自定义记录",whatHappened:"发生了什么？",amtPh:"0",add:"添加",endWeek:"结束本周并发放",history:"记录",noActivity:"还没有记录，点上面的按钮开始吧！",weekOf:"第",dows:["一","二","三","四","五","六","日"],months:["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],jars:"<b>三个罐子：</b>把每次发的钱分成 <b>花费</b>、<b>储蓄</b>、<b>分享</b> —— 例如 50% 花、30% 存、20% 送礼或捐助。好习惯从小养成。",namePrompt:"这是谁的零花钱？",reasonFirst:"请先填写原因",amtFirst:"请输入金额",addedToast:"已添加 🌟",recordedToast:"已记录",newWeekToast:"新的一周开始啦 🌱",capAlert:`提醒：本周奖励已达封顶 +${CUR}${BONUS_CAP}，超出的部分不再计入。奖励是为了鼓励好习惯，而不是变成赚钱游戏哦。`,zeroAlert:`本周余额已经到 ${CUR}0 了。不会变成负数，所以不存在倒欠——但也许是个聊聊"今天发生了什么"的好时机。`,endConfirm:(t,b)=>`结束本周？\n\n本周合计：${CUR}${t}\n这笔钱将发放，下周从 ${CUR}${b} 重新开始。`,weekEnded:(p)=>`本周结束 — 已发放 ${CUR}${p}`}
+};
+let state={name:"",lang:"bi",entries:[]};let customSign=1;
+const toast=(m)=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1600);};
+function L(){return state.lang==='zh'?T.zh:T.en;}
+function defaultName(){return state.lang==='zh'?"我的孩子":"my son";}
+function catLabel(it){if(state.lang==='en')return `<span class="lbl">${it.en}</span>`;if(state.lang==='zh')return `<span class="lbl">${it.zh}</span>`;return `<span class="lbl">${it.en}<small>${it.zh}</small></span>`;}
+function reasonText(en){const all=[...BONUSES,...DEDUCTIONS];if(en.kind==='cat'){const it=all.find(x=>x.id===en.refId);if(it){if(state.lang==='en')return it.en;if(state.lang==='zh')return it.zh;return it.en+' · '+it.zh;}}if(en.kind==='base')return en.payout!=null?L().weekEnded(en.payout):'';return en.reason;}
+async function load(){try{const r=await window.storage.get('pmtracker:state');if(r&&r.value)state=JSON.parse(r.value);}catch(e){}if(!state.entries)state.entries=[];if(!state.lang)state.lang='bi';if(!state.name)state.name=defaultName();render();}
+async function save(){try{await window.storage.set('pmtracker:state',JSON.stringify(state));}catch(e){toast("Couldn't save 保存失败");}}
+function lastWeekStart(){for(const en of state.entries){if(en.kind==='base')return en.ts;}return 0;}
+function weekBalance(){const since=lastWeekStart();let bonusRaw=0,ded=0;state.entries.forEach(en=>{if(en.ts>=since&&en.kind!=='base'){if(en.amt>0)bonusRaw+=en.amt;else ded+=Math.abs(en.amt);}});const bonus=Math.min(bonusRaw,BONUS_CAP);const capped=bonusRaw>BONUS_CAP;const total=Math.max(0,BASE_WEEKLY+bonus-ded);return{base:BASE_WEEKLY,bonus,bonusRaw,capped,ded,total};}
+function checkBoundaries(before,after){
+  // bonus cap just crossed
+  if(after.bonusRaw>BONUS_CAP && before.bonusRaw<=BONUS_CAP){setTimeout(()=>alert(L().capAlert),120);return;}
+  // balance just hit zero (was above, now floored at 0)
+  if(after.total===0 && before.total>0){setTimeout(()=>alert(L().zeroAlert),120);}
+}
+function addCat(refId,amt){const before=weekBalance();state.entries.unshift({kind:'cat',refId,amt,ts:Date.now()});const after=weekBalance();save();render();checkBoundaries(before,after);}
+function addCustomEntry(reason,amt){const before=weekBalance();state.entries.unshift({kind:'custom',reason,amt,ts:Date.now()});const after=weekBalance();save();render();checkBoundaries(before,after);}
+function endWeek(){const wb=weekBalance();const pay=Math.max(0,wb.total);if(!confirm(L().endConfirm(pay,BASE_WEEKLY)))return;state.entries.unshift({kind:'base',amt:BASE_WEEKLY,payout:pay,ts:Date.now()});save();render();toast(L().newWeekToast);}
+function delEntry(ts){state.entries=state.entries.filter(e=>e.ts!==ts);save();render();}
+function editName(){const n=prompt(L().namePrompt,state.name);if(n&&n.trim()){state.name=n.trim();save();render();}}
+function setLang(l){state.lang=l;save();render();}
+function timeAgo(ts){const d=new Date(ts);return d.toLocaleDateString(undefined,{weekday:'short'})+' '+d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});}
+function startOfDay(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();}
+function mondayOf(d){const x=new Date(d);const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);x.setHours(0,0,0,0);return x;}
+function isoWeek(d){const t=new Date(d.getFullYear(),d.getMonth(),d.getDate());const day=(t.getDay()+6)%7;t.setDate(t.getDate()-day+3);const first=new Date(t.getFullYear(),0,4);const fday=(first.getDay()+6)%7;first.setDate(first.getDate()-fday+3);return 1+Math.round((t-first)/(7*864e5));}
+function dayNet(dayStart){const dayEnd=dayStart+864e5;let net=0;state.entries.forEach(en=>{if(en.kind!=='base'&&en.ts>=dayStart&&en.ts<dayEnd)net+=en.amt;});return net;}
+function render(){const wb=weekBalance();const t=L();const app=document.getElementById('app');app.innerHTML=`
+  <div class="langbar">
+    <button class="${state.lang==='en'?'on':''}" onclick="setLang('en')">EN</button>
+    <button class="${state.lang==='bi'?'on':''}" onclick="setLang('bi')">EN/中</button>
+    <button class="${state.lang==='zh'?'on':''}" onclick="setLang('zh')">中文</button>
+  </div>
+  <header>
+    <div class="eyebrow">${t.eyebrow}</div>
+    <div class="kidname">${t.forName} <span onclick="editName()">${state.name} ✎</span></div>
+    <div class="jar">
+      <div class="jar-label">${t.balLabel}</div>
+      <div class="balance"><span class="cur">${CUR}</span>${Math.max(0,wb.total)}</div>
+      <div class="week-note">${t.startsAt} <b>${CUR}${BASE_WEEKLY}</b> ${t.everyWeek}</div>
+      <div class="breakdown">
+        <div class="b-base"><span class="num">${CUR}${wb.base}</span>${t.base}</div>
+        <div class="b-bonus"><span class="num">+${wb.bonus}${wb.capped?' ⛳':''}</span>${t.earned}${wb.capped?' ('+t.cappedTag+')':''}</div>
+        <div class="b-ded"><span class="num">−${wb.ded}</span>${t.lost}</div>
+      </div>
+    </div>
+    </div>
+  </header>
+  ${(function(){
+    const now=new Date();const mon=mondayOf(now);const todayS=startOfDay(now);
+    const wk=isoWeek(now);
+    let label;
+    if(state.lang==='zh'){label=`${t.months[now.getMonth()]}${now.getDate()}日 · 第${wk}周`;}
+    else{label=`${t.months[now.getMonth()]} ${now.getDate()} · ${t.weekOf} ${wk}`;}
+    let cells='';
+    for(let i=0;i<7;i++){
+      const d=new Date(mon);d.setDate(mon.getDate()+i);const ds=startOfDay(d);
+      const net=dayNet(ds);
+      const isToday=ds===todayS;const isFuture=ds>todayS;
+      let cls='day';if(isToday)cls+=' today';if(isFuture)cls+=' future';
+      if(!isFuture&&net>0)cls+=' haspos';if(!isFuture&&net<0)cls+=' hasneg';
+      let val='';if(net>0)val=`<span class="dval up">+${net}</span>`;else if(net<0)val=`<span class="dval down">${net}</span>`;else val=`<span class="dval"></span>`;
+      cells+=`<div class="${cls}"><span class="dow">${t.dows[i]}</span><span class="dnum">${d.getDate()}</span>${val}</div>`;
+    }
+    return `<div class="weekcard"><div class="weekhead"><span class="month">${label}</span></div><div class="weekgrid">${cells}</div></div>`;
+  })()}
+  <div class="sec-title"><h2>${t.earnExtra}</h2><div class="rule"></div></div>
+  <div class="actions">${BONUSES.map(b=>`<button class="act bonus" onclick="addCat('${b.id}',${b.amt})">${catLabel(b)}<span class="amt">+${CUR}${b.amt}</span></button>`).join('')}</div>
+  <div class="sec-title"><h2>${t.loseMoney}</h2><div class="rule"></div></div>
+  <div class="actions">${DEDUCTIONS.map(d=>`<button class="act deduct" onclick="addCat('${d.id}',${-d.amt})">${catLabel(d)}<span class="amt">−${CUR}${d.amt}</span></button>`).join('')}</div>
+  <div class="sec-title"><h2>${t.addOwn}</h2><div class="rule"></div></div>
+  <div class="actions"><div class="custom-row">
+    <input type="text" id="cReason" placeholder="${t.whatHappened}">
+    <div class="pm"><button id="signPlus" class="${customSign>0?'on':''}" onclick="setSign(1)">+</button><button id="signMinus" class="${customSign<0?'on':''}" onclick="setSign(-1)">−</button></div>
+    <input type="number" id="cAmt" placeholder="${t.amtPh}" min="0" step="1">
+    <button class="custom-add" onclick="addCustom()">${t.add}</button>
+  </div></div>
+  <div class="weekbar"><button class="endweek" onclick="endWeek()">${t.endWeek}</button></div>
+  <div class="savings-note">💡 ${t.jars}</div>
+  <div class="sec-title"><h2>${t.history}</h2><div class="rule"></div></div>
+  <ul class="ledger">${state.entries.length===0?`<div class="empty">${t.noActivity}</div>`:state.entries.map(en=>{const cls=en.kind==='base'?'base':(en.amt>0?'up':'down');const sign=en.amt>0?'+':'−';const dcls=en.amt>0?'up':'down';const icon=en.kind==='base'?'★':(en.amt>0?'↑':'↓');return `<li><div class="icon ${cls}">${icon}</div><div class="info"><div class="reason">${reasonText(en)}</div><div class="when">${timeAgo(en.ts)}</div></div><div class="delta ${dcls}">${sign}${CUR}${Math.abs(en.amt)}</div><button class="del" onclick="delEntry(${en.ts})">×</button></li>`;}).join('')}</ul>`;}
+function setSign(s){customSign=s;document.getElementById('signPlus').classList.toggle('on',s>0);document.getElementById('signMinus').classList.toggle('on',s<0);}
+function addCustom(){const reason=document.getElementById('cReason').value.trim();const amt=parseInt(document.getElementById('cAmt').value,10);if(!reason){toast(L().reasonFirst);return;}if(!amt||amt<=0){toast(L().amtFirst);return;}addCustomEntry(reason,customSign*amt);toast(customSign>0?L().addedToast:L().recordedToast);}
+load();
+</script>
+</body>
+</html>
