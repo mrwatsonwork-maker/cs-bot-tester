@@ -86,11 +86,25 @@
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--paper);padding:12px 20px;border-radius:30px;font-weight:bold;font-size:14px;opacity:0;transition:all .25s ease;pointer-events:none;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25);}
   .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
   .loading{text-align:center;padding:60px 0;color:var(--muted);}
+  /* in-page modal */
+  .modal-mask{position:fixed;inset:0;background:rgba(26,43,31,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s ease;}
+  .modal-mask.show{opacity:1;pointer-events:auto;}
+  .modal{background:var(--card);border:3px solid var(--ink);border-radius:20px;box-shadow:7px 7px 0 var(--ink);width:100%;max-width:340px;padding:22px 20px 18px;transform:translateY(14px) scale(.97);transition:transform .2s ease;}
+  .modal-mask.show .modal{transform:translateY(0) scale(1);}
+  .modal .m-title{font-size:17px;font-weight:bold;margin-bottom:8px;}
+  .modal .m-body{font-size:14px;line-height:1.55;color:var(--ink);white-space:pre-wrap;margin-bottom:16px;}
+  .modal input[type=text]{width:100%;border:2px solid var(--ink);border-radius:12px;padding:11px 12px;font-size:15px;font-family:inherit;background:var(--card);margin-bottom:16px;}
+  .modal .m-btns{display:flex;gap:10px;}
+  .modal .m-btns button{flex:1;border:2px solid var(--ink);border-radius:12px;padding:12px;font-weight:bold;font-size:14px;cursor:pointer;font-family:inherit;box-shadow:3px 3px 0 var(--ink);background:var(--card);color:var(--ink);}
+  .modal .m-btns button:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink);}
+  .modal .m-btns button.primary{background:var(--gold);}
+  .modal .m-btns button.danger{background:var(--rust);color:#fff;}
 </style>
 </head>
 <body>
 <div class="wrap" id="app"><div class="loading">Loading… 加载中…</div></div>
 <div class="toast" id="toast"></div>
+<div class="modal-mask" id="modalMask"><div class="modal" id="modalBox"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL="https://xsortbbwqpjbhfobdvvi.supabase.co";
@@ -112,11 +126,42 @@ const DEDUCTIONS=[
   {id:'d4',en:"Broke something",zh:"损坏物品",amt:2},
 ];
 const T={
-  en:{eyebrow:"Pocket Money",forName:"for",balLabel:"This week's balance",startsAt:"Starts at",everyWeek:"every week",base:"base",earned:"earned",lost:"lost",capNote:`Bonus capped at +${CUR}${BONUS_CAP}/week · never goes below ${CUR}0`,cappedTag:"max",earnExtra:"Earn extra",loseMoney:"Lose money",addOwn:"Add your own",whatHappened:"What happened?",amtPh:"0",add:"Add",endWeek:"End week & pay out",history:"History",noActivity:"No activity yet. Tap a button above to start!",weekOf:"Week",dows:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],months:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],jars:"<b>Three jars idea:</b> split each payout into <b>Spend</b>, <b>Save</b> and <b>Share</b> — e.g. 50% spend, 30% save, 20% give. Good money habits start small.",namePrompt:"Whose pocket money is this?",reasonFirst:"Add a reason first",amtFirst:"Enter an amount",addedToast:"Added 🌟",recordedToast:"Recorded",newWeekToast:"New week started 🌱",capAlert:`Heads up: this week's bonus has hit the cap of +${CUR}${BONUS_CAP}. Anything extra won't be added — the idea is to reward good habits, not turn it into a money game.`,zeroAlert:`This week's balance is now at ${CUR}0. It won't go negative, so there's nothing owed — but maybe a good moment to talk about what happened.`,endConfirm:(t,b)=>`End this week?\n\nThis week's total: ${CUR}${t}\nThat amount gets paid out, and a fresh week starts with ${CUR}${b}.`,weekEnded:(p)=>`Week ended — paid ${CUR}${p}`},
-  zh:{eyebrow:"零花钱",forName:"宝贝：",balLabel:"本周余额",startsAt:"每周起始",everyWeek:"",base:"基础",earned:"奖励",lost:"扣除",capNote:`奖励每周封顶 +${CUR}${BONUS_CAP} · 最低不低于 ${CUR}0`,cappedTag:"封顶",earnExtra:"加分奖励",loseMoney:"扣分",addOwn:"自定义记录",whatHappened:"发生了什么？",amtPh:"0",add:"添加",endWeek:"结束本周并发放",history:"记录",noActivity:"还没有记录，点上面的按钮开始吧！",weekOf:"第",dows:["一","二","三","四","五","六","日"],months:["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],jars:"<b>三个罐子：</b>把每次发的钱分成 <b>花费</b>、<b>储蓄</b>、<b>分享</b> —— 例如 50% 花、30% 存、20% 送礼或捐助。好习惯从小养成。",namePrompt:"这是谁的零花钱？",reasonFirst:"请先填写原因",amtFirst:"请输入金额",addedToast:"已添加 🌟",recordedToast:"已记录",newWeekToast:"新的一周开始啦 🌱",capAlert:`提醒：本周奖励已达封顶 +${CUR}${BONUS_CAP}，超出的部分不再计入。奖励是为了鼓励好习惯，而不是变成赚钱游戏哦。`,zeroAlert:`本周余额已经到 ${CUR}0 了。不会变成负数，所以不存在倒欠——但也许是个聊聊"今天发生了什么"的好时机。`,endConfirm:(t,b)=>`结束本周？\n\n本周合计：${CUR}${t}\n这笔钱将发放，下周从 ${CUR}${b} 重新开始。`,weekEnded:(p)=>`本周结束 — 已发放 ${CUR}${p}`}
+  en:{eyebrow:"Pocket Money",forName:"for",balLabel:"This week's balance",startsAt:"Starts at",everyWeek:"every week",base:"base",earned:"earned",lost:"lost",capNote:`Bonus capped at +${CUR}${BONUS_CAP}/week · never goes below ${CUR}0`,cappedTag:"max",earnExtra:"Earn extra",loseMoney:"Lose money",addOwn:"Add your own",whatHappened:"What happened?",amtPh:"0",add:"Add",endWeek:"End week & pay out",history:"History",noActivity:"No activity yet. Tap a button above to start!",weekOf:"Week",dows:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],months:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],jars:"<b>Three jars idea:</b> split each payout into <b>Spend</b>, <b>Save</b> and <b>Share</b> — e.g. 50% spend, 30% save, 20% give. Good money habits start small.",namePrompt:"Whose pocket money is this?",reasonFirst:"Add a reason first",amtFirst:"Enter an amount",addedToast:"Added 🌟",recordedToast:"Recorded",newWeekToast:"New week started 🌱",capAlert:`Heads up: this week's bonus has hit the cap of +${CUR}${BONUS_CAP}. Anything extra won't be added — the idea is to reward good habits, not turn it into a money game.`,zeroAlert:`This week's balance is now at ${CUR}0. It won't go negative, so there's nothing owed — but maybe a good moment to talk about what happened.`,endConfirm:(t,b)=>`This week's total: ${CUR}${t}\nThat amount gets paid out, and a fresh week starts with ${CUR}${b}.`,weekEnded:(p)=>`Week ended — paid ${CUR}${p}`},
+  zh:{eyebrow:"零花钱",forName:"宝贝：",balLabel:"本周余额",startsAt:"每周起始",everyWeek:"",base:"基础",earned:"奖励",lost:"扣除",capNote:`奖励每周封顶 +${CUR}${BONUS_CAP} · 最低不低于 ${CUR}0`,cappedTag:"封顶",earnExtra:"加分奖励",loseMoney:"扣分",addOwn:"自定义记录",whatHappened:"发生了什么？",amtPh:"0",add:"添加",endWeek:"结束本周并发放",history:"记录",noActivity:"还没有记录，点上面的按钮开始吧！",weekOf:"第",dows:["一","二","三","四","五","六","日"],months:["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],jars:"<b>三个罐子：</b>把每次发的钱分成 <b>花费</b>、<b>储蓄</b>、<b>分享</b> —— 例如 50% 花、30% 存、20% 送礼或捐助。好习惯从小养成。",namePrompt:"这是谁的零花钱？",reasonFirst:"请先填写原因",amtFirst:"请输入金额",addedToast:"已添加 🌟",recordedToast:"已记录",newWeekToast:"新的一周开始啦 🌱",capAlert:`提醒：本周奖励已达封顶 +${CUR}${BONUS_CAP}，超出的部分不再计入。奖励是为了鼓励好习惯，而不是变成赚钱游戏哦。`,zeroAlert:`本周余额已经到 ${CUR}0 了。不会变成负数，所以不存在倒欠——但也许是个聊聊"今天发生了什么"的好时机。`,endConfirm:(t,b)=>`本周合计：${CUR}${t}\n这笔钱将发放，下周从 ${CUR}${b} 重新开始。`,weekEnded:(p)=>`本周结束 — 已发放 ${CUR}${p}`}
 };
 let state={name:"",lang:"bi",entries:[]};let customSign=1;
 const toast=(m)=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1600);};
+// in-page modal: returns a Promise. type: 'alert' | 'confirm' | 'prompt'
+function modal(opts){
+  return new Promise(resolve=>{
+    const mask=document.getElementById('modalMask');const box=document.getElementById('modalBox');
+    const type=opts.type||'alert';
+    const okTxt=opts.okText||(state.lang==='en'?'OK':'确定');
+    const cancelTxt=opts.cancelText||(state.lang==='en'?'Cancel':'取消');
+    const hasInput=type==='prompt';
+    const hasCancel=type==='confirm'||type==='prompt';
+    box.innerHTML=`
+      ${opts.title?`<div class="m-title">${opts.title}</div>`:''}
+      ${opts.body?`<div class="m-body">${opts.body}</div>`:''}
+      ${hasInput?`<input type="text" id="modalInput" value="">`:''}
+      <div class="m-btns">
+        ${hasCancel?`<button class="cancel">${cancelTxt}</button>`:''}
+        <button class="${opts.danger?'danger':'primary'} ok">${okTxt}</button>
+      </div>`;
+    if(hasInput){const inp=box.querySelector('#modalInput');inp.value=opts.defaultValue||'';}
+    mask.classList.add('show');
+    if(hasInput){setTimeout(()=>{const inp=box.querySelector('#modalInput');if(inp){inp.focus();inp.select();}},50);}
+    const close=(val)=>{mask.classList.remove('show');mask.onclick=null;resolve(val);};
+    box.querySelector('.ok').onclick=()=>{
+      if(hasInput){close(box.querySelector('#modalInput').value);}
+      else{close(true);}
+    };
+    const cancelBtn=box.querySelector('.cancel');
+    if(cancelBtn)cancelBtn.onclick=()=>close(type==='prompt'?null:false);
+    mask.onclick=(e)=>{if(e.target===mask)close(type==='prompt'?null:(type==='confirm'?false:true));};
+    if(hasInput){const inp=box.querySelector('#modalInput');inp.onkeydown=(e)=>{if(e.key==='Enter')close(inp.value);};}
+  });
+}
 function L(){return state.lang==='zh'?T.zh:T.en;}
 function defaultName(){return state.lang==='zh'?"我的孩子":"my son";}
 function catLabel(it){if(state.lang==='en')return `<span class="lbl">${it.en}</span>`;if(state.lang==='zh')return `<span class="lbl">${it.zh}</span>`;return `<span class="lbl">${it.en}<small>${it.zh}</small></span>`;}
@@ -158,15 +203,15 @@ function lastWeekStart(){for(const en of state.entries){if(en.kind==='base')retu
 function weekBalance(){const since=lastWeekStart();let bonusRaw=0,ded=0;state.entries.forEach(en=>{if(en.ts>=since&&en.kind!=='base'){if(en.amt>0)bonusRaw+=en.amt;else ded+=Math.abs(en.amt);}});const bonus=Math.min(bonusRaw,BONUS_CAP);const capped=bonusRaw>BONUS_CAP;const total=Math.max(0,BASE_WEEKLY+bonus-ded);return{base:BASE_WEEKLY,bonus,bonusRaw,capped,ded,total};}
 function checkBoundaries(before,after){
   // bonus cap just crossed
-  if(after.bonusRaw>BONUS_CAP && before.bonusRaw<=BONUS_CAP){setTimeout(()=>alert(L().capAlert),120);return;}
+  if(after.bonusRaw>BONUS_CAP && before.bonusRaw<=BONUS_CAP){setTimeout(()=>modal({type:'alert',body:L().capAlert}),120);return;}
   // balance just hit zero (was above, now floored at 0)
-  if(after.total===0 && before.total>0){setTimeout(()=>alert(L().zeroAlert),120);}
+  if(after.total===0 && before.total>0){setTimeout(()=>modal({type:'alert',body:L().zeroAlert}),120);}
 }
 function addCat(refId,amt){const before=weekBalance();state.entries.unshift({kind:'cat',refId,amt,ts:Date.now()});const after=weekBalance();save();render();checkBoundaries(before,after);}
 function addCustomEntry(reason,amt){const before=weekBalance();state.entries.unshift({kind:'custom',reason,amt,ts:Date.now()});const after=weekBalance();save();render();checkBoundaries(before,after);}
-function endWeek(){const wb=weekBalance();const pay=Math.max(0,wb.total);if(!confirm(L().endConfirm(pay,BASE_WEEKLY)))return;state.entries.unshift({kind:'base',amt:BASE_WEEKLY,payout:pay,ts:Date.now()});save();render();toast(L().newWeekToast);}
+async function endWeek(){const wb=weekBalance();const pay=Math.max(0,wb.total);const ok=await modal({type:'confirm',title:L().endWeek,body:L().endConfirm(pay,BASE_WEEKLY),okText:state.lang==='en'?'Pay out':'发放',danger:false});if(!ok)return;state.entries.unshift({kind:'base',amt:BASE_WEEKLY,payout:pay,ts:Date.now()});save();render();toast(L().newWeekToast);}
 function delEntry(ts){state.entries=state.entries.filter(e=>e.ts!==ts);save();render();}
-function editName(){const n=prompt(L().namePrompt,state.name);if(n&&n.trim()){state.name=n.trim();save();render();}}
+async function editName(){const n=await modal({type:'prompt',title:L().namePrompt,defaultValue:state.name});if(n&&n.trim()){state.name=n.trim();save();render();}}
 function setLang(l){state.lang=l;save();render();}
 function timeAgo(ts){const d=new Date(ts);return d.toLocaleDateString(undefined,{weekday:'short'})+' '+d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});}
 function startOfDay(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();}
